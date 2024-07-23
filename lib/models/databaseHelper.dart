@@ -60,26 +60,23 @@ Future<void> createUser(
   }
 
 
-Future<bool> loginUser(String username, String password) async {
+Future<bool> loginUser(String email, String password) async {
+  if (_connection == null) {
+    await connect();
+  }
   try {
-    final conn = await database(); // Presumindo que você tem uma função para obter a conexão
-
-    // Execute a consulta usando o método `query` correto
-    final result = await conn.query(
-      '''
+    final result = await _connection!.execute(
+      r'''
       SELECT COUNT(*) AS count
       FROM users
-      WHERE username = username AND password = password
+      WHERE email = $1 AND password = $2
       ''',
-      substitutionValues: {
-        'username': username,
-        'password': password,
-      },
+      parameters: [
+        email,
+        password,
+      ],
     );
 
-    await conn.close(); // Feche a conexão após a consulta
-
-    // Verifique se a consulta retornou algum resultado e se a contagem é igual a 1
     if (result.isNotEmpty && result[0][0] == 1) {
       return true; // Usuário autenticado com sucesso
     } else {
@@ -87,7 +84,7 @@ Future<bool> loginUser(String username, String password) async {
     }
   } catch (e) {
     print('Error logging in: $e');
-    return false; // Retorne false em caso de erro
+    rethrow;
   }
 }
 }

@@ -1,6 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
+import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
+import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
+  @override
+  _DashboardPageState createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  bool _showClienteOptions = false;
+  bool _showEntregadorOptions = false;
+  bool _showEntregaOptions = false;
+
+  void _toggleClienteOptions() {
+    setState(() {
+      _showClienteOptions = !_showClienteOptions;
+    });
+  }
+
+  void _toggleEntregadorOptions() {
+    setState(() {
+      _showEntregadorOptions = !_showEntregadorOptions;
+    });
+  }
+
+  void _toggleEntregaOptions() {
+    setState(() {
+      _showEntregaOptions = !_showEntregaOptions;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,13 +65,22 @@ class DashboardPage extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.local_shipping),
               title: const Text('Entregas'),
-              onTap: () {},
+              onTap: () {
+                _toggleEntregaOptions();
+              },
             ),
-            ListTile(
-              title: const Text('Adicionar Entregas'),
-              onTap: () {},
-              contentPadding: EdgeInsets.only(left: 50.0),
-            ),
+            if (_showEntregaOptions) ...[
+              ListTile(
+                title: const Text('Adicionar Entrega'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EntregaCadastroPage()),
+                  );
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+            ],
             ListTile(
               title: const Text('Excluir Entregas'),
               onTap: () {},
@@ -50,13 +89,65 @@ class DashboardPage extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.person),
               title: const Text('Entregadores'),
-              onTap: () {},
+              onTap: _toggleEntregadorOptions,
             ),
+            if (_showEntregadorOptions) ...[
+              ListTile(
+                title: const Text('Cadastrar Entregador'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EntregadorCadastroPage()),
+                  );
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+              ListTile(
+                title: const Text('Excluir Entregador'),
+                onTap: () {
+                  // Navegar para a tela de excluir entregador
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+              ListTile(
+                title: const Text('Listar Entregadores'),
+                onTap: () {
+                  // Navegar para a tela de listar entregadores
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+            ],
             ListTile(
               leading: Icon(Icons.people),
               title: const Text('Clientes'),
-              onTap: () {},
+              onTap: _toggleClienteOptions,
             ),
+            if (_showClienteOptions) ...[
+              ListTile(
+                title: const Text('Cadastrar Cliente'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ClienteCadastroPage()),
+                  );
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+              ListTile(
+                title: const Text('Excluir Cliente'),
+                onTap: () {
+                  // Navegar para a tela de excluir cliente
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+              ListTile(
+                title: const Text('Listar Clientes'),
+                onTap: () {
+                  // Navegar para a tela de listar clientes
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+            ],
             ListTile(
               leading: Icon(Icons.map),
               title: const Text('Mapa de Entregas'),
