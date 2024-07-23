@@ -1,39 +1,46 @@
-import 'package:flutter_projeto/pages/login/login_page.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_projeto/models/dataBaseHelper.dart'; // Certifique-se de que o caminho está correto
+import 'package:flutter_projeto/pages/login/login_page.dart'; // Adicione os imports necessários para o seu app
+import 'package:flutter_projeto/pages/main/main_page.dart';
 
 void main() async {
-  var options = const FirebaseOptions(
-      apiKey: "AIzaSyDJOjWeeO_3gamsv4hZRt88QUD7b2hrqF8",
-      authDomain: "testeapp23-6ca39.firebaseapp.com",
-      projectId: "testeapp23-6ca39",
-      storageBucket: "testeapp23-6ca39.appspot.com",
-      messagingSenderId: "361982466517",
-      appId: "1:361982466517:web:5cd1847d020b3ea91e055c",
-      measurementId: "G-JZEBX8KP5K");
-  WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb) {
-    await Firebase.initializeApp(options: options);
-  } else {
-    await Firebase.initializeApp();
+  WidgetsFlutterBinding.ensureInitialized(); // Inicializa o Flutter
+
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+
+  try {
+    // Conecta ao banco de dados
+    await _databaseHelper.connect();
+
+    // Cria a tabela de usuários se não existir
+    await _databaseHelper.createUserTable(); 
+
+    // Cria um usuário
+    await _databaseHelper.createUser('testuser', 'testuser@example.com', 'password123');
+
+    // Tenta logar o usuário
+    bool isAuthenticated = await _databaseHelper.loginUser('testuser', 'password123');
+    print('User authentication status: $isAuthenticated');
+
+    // Fecha a conexão
+    await _databaseHelper.closeConnection();
+  } catch (e) {
+    print('Erro ao conectar ou operar no banco de dados: $e');
   }
-  runApp(const MyApp());
+
+  // Inicia o app
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),
+      home: LoginPage(), // Ajuste para a página inicial do seu app
     );
   }
 }

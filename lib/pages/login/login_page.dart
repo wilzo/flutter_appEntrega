@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_projeto/models/userLocal.dart';
+import 'package:flutter_projeto/models/dataBaseHelper.dart';
+import 'package:flutter_projeto/pages/login/signup_page.dart';
 import 'package:flutter_projeto/pages/main/main_page.dart';
-import 'package:flutter_projeto/pages/login/signup_page.dart'; // Certifique-se de que o caminho está correto
-import 'package:flutter_projeto/services/user_services.dart';
+import 'package:flutter_projeto/pages/home/dashboardPage.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -12,53 +12,52 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final UserLocal _userLocal = UserLocal();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   bool _isLoading = false;
 
-  void _login() async {
+void _login() async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  String email = _emailController.text.trim();
+  String password = _passwordController.text.trim();
+
+  if (email.isEmpty || password.isEmpty) {
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
-
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Email e senha não podem estar vazios')),
-      );
-      return;
-    }
-
-    _userLocal.email = email;
-    _userLocal.password = password;
-
-    UserServices userServices = UserServices();
-    bool ok = await userServices.signIn(
-      _userLocal.email!,
-      _userLocal.password!,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Todos os campos são obrigatórios')),
     );
+    return;
+  }
 
-    if (ok) {
+  try {
+    bool success = await _databaseHelper.loginUser(email, password);
+    if (success) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => MainPage(),
+          builder: (context) => DashboardPage(),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha no login. Verifique suas credenciais.')),
+        SnackBar(content: Text('Credenciais inválidas')),
       );
     }
-
+  } catch (e) {
+    print('Erro ao fazer login: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao fazer login: $e')),
+    );
+  } finally {
     setState(() {
       _isLoading = false;
     });
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +65,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Color(0xFFFAFAFA),
       body: SingleChildScrollView(
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 400.0, vertical: 50.0),
+          padding: const EdgeInsets.symmetric(horizontal: 400.0, vertical: 50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -76,9 +74,8 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Image.asset(
                     'assets/images/entrega.jpg',
-                    height: 200, // Novo valor de altura
-                    fit: BoxFit
-                        .fitHeight, // Ajusta a largura proporcionalmente à altura
+                    height: 200,
+                    fit: BoxFit.fitHeight,
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -109,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: const Text(
-                  'Usuário',
+                  'Email',
                   style: TextStyle(
                     color: Color(0xFFFF0000),
                     fontSize: 16,

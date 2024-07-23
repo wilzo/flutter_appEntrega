@@ -9,13 +9,14 @@ environment:
   sdk: '>=3.2.6 <4.0.0'
 
 dependencies:
+  flutter:
+    sdk: flutter
   cloud_firestore: ^4.15.6
   cupertino_icons: ^1.0.2
   firebase_auth: ^4.17.6
   firebase_core: ^2.25.5
   firebase_storage: ^11.6.7
-  flutter:
-    sdk: flutter
+  postgres: ^3.1.2 # Adicione o pacote postgres aqui
 
 dev_dependencies:
   flutter_lints: ^2.0.0
@@ -23,7 +24,6 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
-
   uses-material-design: true
   assets:
     - assets/images/

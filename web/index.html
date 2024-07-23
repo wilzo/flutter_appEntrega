@@ -1,39 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="flutter_application_q">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>flutter_application_q</title>
   <link rel="manifest" href="manifest.json">
-
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
-  </script>
-  <!-- This script adds the flutter initialization JS code -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
   <script src="flutter.js" defer></script>
-</head>
-<body>
   <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
+    window.addEventListener('load', function() {
+      // Carregar o ponto de entrada do Flutter
+      _flutter.loader.load({
         onEntrypointLoaded: function(engineInitializer) {
           engineInitializer.initializeEngine().then(function(appRunner) {
             appRunner.runApp();
@@ -42,28 +19,9 @@
       });
     });
   </script>
+</head>
+<body>
+  <!-- O script do main.dart.js é carregado após o flutter.js -->
+  <script src="main.dart.js" type="application/javascript"></script>
 </body>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyDJOjWeeO_3gamsv4hZRt88QUD7b2hrqF8",
-    authDomain: "testeapp23-6ca39.firebaseapp.com",
-    projectId: "testeapp23-6ca39",
-    storageBucket: "testeapp23-6ca39.appspot.com",
-    messagingSenderId: "361982466517",
-    appId: "1:361982466517:web:5cd1847d020b3ea91e055c",
-    measurementId: "G-JZEBX8KP5K"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
 </html>

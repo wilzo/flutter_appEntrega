@@ -1,204 +1,192 @@
-import 'package:flutter_projeto/models/userLocal.dart';
-import 'package:flutter_projeto/services/user_services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_projeto/models/dataBaseHelper.dart'; // Certifique-se de que o caminho está correto
+import 'package:flutter_projeto/pages/login/login_page.dart'; // Ajustado para referência correta
 
-class SignupPage extends StatelessWidget {
-  SignupPage({super.key});
+class SignupPage extends StatefulWidget {
+  @override
+  _SignupPageState createState() => _SignupPageState();
+}
 
-  TextEditingController userNameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  UserLocal user = UserLocal();
+class _SignupPageState extends State<SignupPage> {
+  final TextEditingController userNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _databaseHelper.connect(); // Conectar ao banco de dados ao inicializar
+  }
+
+  @override
+  void dispose() {
+    userNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _register() async {
+    String username = userNameController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Todos os campos são obrigatórios')),
+      );
+      return;
+    }
+
+    try {
+      await _databaseHelper.createUser(username, email, password);
+      Navigator.pop(context); // Navegue para a página de login ou mostre uma mensagem de sucesso
+    } catch (e) {
+      print('Erro ao criar usuário: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao criar usuário: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(left: 50, right: 50, top: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 400.0, vertical: 50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(
-                height: 40,
-              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Column(
+                  Image.asset(
+                    'assets/images/entrega.jpg',
+                    height: 200,
+                    fit: BoxFit.fitHeight,
+                  ),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Registre-se',
+                      
+                      const Text(
+                        'ENTREGA JA',
                         style: TextStyle(
-                            color: Color.fromARGB(255, 240, 119, 5),
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold),
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 240, 5, 5),
+                        ),
                       ),
-                      Text(
-                        "Aplicativo para Commodities",
+                      const Text(
+                        'GERENCIE SUAS ENTREGAS',
                         style: TextStyle(
-                            color: Color.fromARGB(255, 240, 119, 5),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        "multi-funcional",
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 240, 119, 5),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600),
+                          fontSize: 20,
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
-                  ClipOval(
-                    child: Image.asset(
-                      'assets/images/entrega.jpg',
-                      height: 150,
-                      width: 150,
-                      fit: BoxFit.fill,
-                    ),
-                  ),
+                  const SizedBox(width: 20),
+                  
                 ],
               ),
-              const SizedBox(
-                height: 20,
+              const SizedBox(height: 20),
+              const Text(
+                'Nome do usuário',
+                style: TextStyle(color: Colors.red),
               ),
               TextFormField(
                 controller: userNameController,
                 decoration: const InputDecoration(
-                  label: Text('Nome do usuário'),
+                  hintText: 'Nome do usuário',
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(width: 1.2),
+                    borderSide: BorderSide(width: 1.2, color: Colors.blue),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(width: 1.2),
+                    borderSide: BorderSide(width: 1.2, color: Colors.blue),
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 15,
+              const SizedBox(height: 15),
+              const Text(
+                'E-mail',
+                style: TextStyle(color: Colors.red),
               ),
               TextFormField(
                 controller: emailController,
                 decoration: const InputDecoration(
-                  label: Text('E-mail'),
+                  hintText: 'email@email.com',
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(width: 1.2),
+                    borderSide: BorderSide(width: 1.2, color: Colors.blue),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(width: 1.2),
+                    borderSide: BorderSide(width: 1.2, color: Colors.blue),
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 15,
+              const SizedBox(height: 15),
+              const Text(
+                'Senha',
+                style: TextStyle(color: Colors.red),
               ),
               TextFormField(
                 controller: passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
-                    label: Text("Senha"),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1.2),
+                  hintText: '••••••••',
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(width: 1.2, color: Colors.blue),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(width: 1.2, color: Colors.blue),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1.2),
-                    )),
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  //utilizando objeto DTO
-                  user.userName = userNameController.text;
-                  user.password = passwordController.text;
-                  user.email = emailController.text;
-                  //criando instância da classe UserServices
-                  UserServices userServices = UserServices();
-
-                  //utilizando a instância da classe UserServices
-                  userServices.signUp(
-                    user.userName.toString(),
-                    user.email.toString(),
-                    user.password.toString(),
-                  );
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 1.8,
-                  minimumSize: const Size.fromHeight(60),
-                  shape: LinearBorder.bottom(),
-                ),
-                child: const Text(
-                  "Registrar",
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 1, 50, 3),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              const Center(
-                child: Text(
-                  'ou',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 1, 50, 3),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(60),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                onPressed: () {},
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/images/googlee.png',
-                      height: 50,
-                    ),
-                    const Text(
-                      "Login com Google",
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 1, 50, 3),
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 8.0,
-              ),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text('Já tem uma conta?'),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(
-                    'Login',
+                  child: const Text(
+                    'Registrar',
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                        fontSize: 16),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoginPage(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Já tem uma conta? Entre',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
