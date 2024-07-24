@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_projeto/pages/home/dashboardPage.dart';
-import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart'; 
-import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
+import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
+import 'package:flutter_projeto/models/databaseHelper.dart';
 
 class ClienteCadastroPage extends StatefulWidget {
   @override
@@ -12,32 +11,11 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _enderecoController = TextEditingController();
-  final TextEditingController _bairroController = TextEditingController();
-  final TextEditingController _cidadeController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+
+  int? _enderecoSelecionado; // Variável para armazenar o ID do endereço selecionado
+
   bool _isLoading = false;
-
-  bool _showClienteOptions = false;
-  bool _showEntregadorOptions = false;
-  bool _showEntregaOptions = false;
-
-  void _toggleClienteOptions() {
-    setState(() {
-      _showClienteOptions = !_showClienteOptions;
-    });
-  }
-
-  void _toggleEntregadorOptions() {
-    setState(() {
-      _showEntregadorOptions = !_showEntregadorOptions;
-    });
-  }
-
-  void _toggleEntregaOptions() {
-    setState(() {
-      _showEntregaOptions = !_showEntregaOptions;
-    });
-  }
 
   void _cadastrarCliente() async {
     setState(() {
@@ -47,11 +25,9 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     String nome = _nomeController.text.trim();
     String telefone = _telefoneController.text.trim();
     String email = _emailController.text.trim();
-    String endereco = _enderecoController.text.trim();
-    String bairro = _bairroController.text.trim();
-    String cidade = _cidadeController.text.trim();
+    int? enderecoId = _enderecoSelecionado; // Obtenha o ID selecionado
 
-    if (nome.isEmpty || telefone.isEmpty || email.isEmpty || endereco.isEmpty || bairro.isEmpty || cidade.isEmpty) {
+    if (nome.isEmpty || telefone.isEmpty || email.isEmpty || enderecoId == null) {
       setState(() {
         _isLoading = false;
       });
@@ -62,11 +38,9 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     }
 
     try {
-      // Chame o método para cadastrar cliente aqui
-      // Exemplo: await _databaseHelper.cadastrarCliente(nome, telefone, email, endereco, bairro, cidade);
+      await _databaseHelper.createCliente(nome, telefone, email, enderecoId);
 
-      // Navegar para uma página de sucesso ou voltar para a página anterior
-      Navigator.pop(context);
+      Navigator.pop(context); // Navegar de volta ou para a página desejada
     } catch (e) {
       print('Erro ao cadastrar cliente: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,143 +53,35 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     }
   }
 
+  void _abrirListagemEnderecos() async {
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
+    );
+
+    if (resultado != null && resultado is int) {
+      setState(() {
+        _enderecoSelecionado = resultado;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.red,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.asset('assets/images/entrega.jpg', height: 50, width: 50),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'ENTREGAJÁ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.dashboard),
-              title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DashboardPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.local_shipping),
-              title: const Text('Entregas'),
-              onTap: _toggleEntregaOptions,
-            ),
-            if (_showEntregaOptions) ...[
-              ListTile(
-                title: const Text('Adicionar Entrega'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EntregaCadastroPage()),
-                  );
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Excluir Entregas'),
-                onTap: () {},
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
-              leading: Icon(Icons.person),
-              title: const Text('Entregadores'),
-              onTap: _toggleEntregadorOptions,
-            ),
-            if (_showEntregadorOptions) ...[
-              ListTile(
-                title: const Text('Cadastrar Entregador'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EntregadorCadastroPage()),
-                  );
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Excluir Entregador'),
-                onTap: () {
-                  // Navegar para a tela de excluir entregador
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Listar Entregadores'),
-                onTap: () {
-                  // Navegar para a tela de listar entregadores
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
-              leading: Icon(Icons.people),
-              title: const Text('Clientes'),
-              onTap: _toggleClienteOptions,
-            ),
-            if (_showClienteOptions) ...[
-              ListTile(
-                title: const Text('Cadastrar Cliente'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ClienteCadastroPage()),
-                  );
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Excluir Cliente'),
-                onTap: () {
-                  // Navegar para a tela de excluir cliente
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Listar Clientes'),
-                onTap: () {
-                  // Navegar para a tela de listar clientes
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
-              leading: Icon(Icons.map),
-              title: const Text('Mapa de Entregas'),
-              onTap: () {
-                // Navegar para o mapa de entregas
-              },
-            ),
-          ],
-        ),
-      ),
       appBar: AppBar(
         title: const Text('Cadastrar Cliente'),
-        backgroundColor: Colors.red,
+        backgroundColor: Color(0xFFFF0000), // Cor igual ao botão "Cadastrar"
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 22, // Aumenta o tamanho da fonte
+          fontWeight: FontWeight.bold,
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 50.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -224,7 +90,7 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
                 children: [
                   Image.asset(
                     'assets/images/entrega.jpg',
-                    height: 200,
+                    height: 100,
                     fit: BoxFit.fitHeight,
                   ),
                   const SizedBox(width: 10),
@@ -252,25 +118,49 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 40),
-              _buildTextField('Nome', _nomeController, 'Nome Completo'),
+              const SizedBox(height: 30),
+              _buildTextField(Icons.person, 'Nome', _nomeController, 'Nome Completo'),
+              const SizedBox(height: 15),
+              _buildTextField(Icons.phone, 'Telefone', _telefoneController, 'Telefone'),
+              const SizedBox(height: 15),
+              _buildTextField(Icons.email, 'Email', _emailController, 'email@email.com'),
               const SizedBox(height: 20),
-              _buildTextField('Telefone', _telefoneController, 'Telefone'),
-              const SizedBox(height: 20),
-              _buildTextField('Email', _emailController, 'email@email.com'),
-              const SizedBox(height: 20),
-              _buildTextField('Endereço', _enderecoController, 'Rua, Número'),
-              const SizedBox(height: 20),
-              _buildTextField('Bairro', _bairroController, 'Bairro'),
-              const SizedBox(height: 20),
-              _buildTextField('Cidade', _cidadeController, 'Cidade'),
-              const SizedBox(height: 40),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                height: 50, // Aumenta a altura do botão
+                decoration: BoxDecoration(
+                  color: Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: _abrirListagemEnderecos,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFE0E0E0), // Cor de fundo igual ao campo de input
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: Icon(Icons.location_on, color: Colors.black), // Ícone adicionado
+                  label: Text(
+                    _enderecoSelecionado == null
+                        ? 'Selecionar endereço do cliente'
+                        : 'Endereço ID: $_enderecoSelecionado',
+                    style: TextStyle(
+                      color: Colors.black, // Cor do texto
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _cadastrarCliente,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFF0000),
+                    backgroundColor: Color(0xFFFF0000), // Cor de fundo do botão
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -297,7 +187,8 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hint) {
+  Widget _buildTextField(
+      IconData icon, String label, TextEditingController controller, String hintText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -306,23 +197,24 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
           style: TextStyle(
             color: Color(0xFFFF0000),
             fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 5),
         Container(
           width: MediaQuery.of(context).size.width * 0.8,
-          child: TextFormField(
+          height: 40,
+          decoration: BoxDecoration(
+            color: Color(0xFFE0E0E0),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: TextField(
             controller: controller,
             decoration: InputDecoration(
-              hintText: hint,
-              border: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.red),
-                borderRadius: BorderRadius.circular(8),
-              ),
+              prefixIcon: Icon(icon, color: Colors.grey[600]),
+              hintText: hintText,
+              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              border: InputBorder.none,
             ),
           ),
         ),

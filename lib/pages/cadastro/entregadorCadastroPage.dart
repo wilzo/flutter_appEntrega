@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/pages/home/dashboardPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
+import 'package:flutter_projeto/models/databaseHelper.dart'; // Adicione esta importação
 
 class EntregadorCadastroPage extends StatefulWidget {
   @override
@@ -14,6 +15,8 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _veiculoController = TextEditingController();
   bool _isLoading = false;
+
+  final DatabaseHelper _databaseHelper = DatabaseHelper(); // Instanciar o DatabaseHelper
 
   bool _showClienteOptions = false;
   bool _showEntregadorOptions = false;
@@ -58,11 +61,9 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
     }
 
     try {
-      // Chame o método para cadastrar entregador aqui
-      // Exemplo: await _databaseHelper.cadastrarEntregador(nome, telefone, email, veiculo);
-
-      // Navegar para uma página de sucesso ou voltar para a página anterior
-      Navigator.pop(context);
+      await _databaseHelper.createEntregadorTable();
+      await _databaseHelper.cadastrarEntregador(nome, telefone, email, veiculo); // Chame o método para cadastrar entregador
+      Navigator.pop(context); // Navegar de volta ou para a página desejada
     } catch (e) {
       print('Erro ao cadastrar entregador: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -96,6 +97,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -206,10 +208,16 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
       appBar: AppBar(
         title: const Text('Cadastrar Entregador'),
         backgroundColor: Colors.red,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 22, // Tamanho da fonte do título
+          fontWeight: FontWeight.bold,
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 50.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -247,13 +255,13 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
                 ],
               ),
               const SizedBox(height: 40),
-              _buildTextField('Nome', _nomeController, 'Nome Completo'),
+              _buildTextField(Icons.person, 'Nome', _nomeController, 'Nome Completo'),
               const SizedBox(height: 20),
-              _buildTextField('Telefone', _telefoneController, 'Telefone'),
+              _buildTextField(Icons.phone, 'Telefone', _telefoneController, 'Telefone'),
               const SizedBox(height: 20),
-              _buildTextField('Email', _emailController, 'email@email.com'),
+              _buildTextField(Icons.email, 'Email', _emailController, 'email@email.com'),
               const SizedBox(height: 20),
-              _buildTextField('Veículo', _veiculoController, 'Veículo'),
+              _buildTextField(Icons.directions_car, 'Veículo', _veiculoController, 'Veículo'),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
@@ -287,7 +295,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hintText) {
+  Widget _buildTextField(IconData icon, String label, TextEditingController controller, String hintText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -301,7 +309,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
         const SizedBox(height: 5),
         Container(
           width: MediaQuery.of(context).size.width * 0.8,
-          height: 40,
+          height: 50,
           decoration: BoxDecoration(
             color: Color(0xFFE0E0E0),
             borderRadius: BorderRadius.circular(10),
@@ -309,6 +317,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
           child: TextField(
             controller: controller,
             decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: Color(0xFFFF0000)),
               hintText: hintText,
               contentPadding: EdgeInsets.symmetric(horizontal: 10),
               border: InputBorder.none,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/pages/home/dashboardPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
+import 'package:flutter_projeto/models/databaseHelper.dart';
 
 class EntregaCadastroPage extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
   final TextEditingController _descricaoController = TextEditingController();
   final TextEditingController _dataController = TextEditingController();
   final TextEditingController _statusController = TextEditingController();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   bool _isLoading = false;
 
   bool _showClienteOptions = false;
@@ -57,7 +59,7 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
 
     try {
       // Chame o método para cadastrar entrega aqui
-      // Exemplo: await _databaseHelper.cadastrarEntrega(descricao, data, status);
+      //
 
       // Navegar para uma página de sucesso ou voltar para a página anterior
       Navigator.pop(context);

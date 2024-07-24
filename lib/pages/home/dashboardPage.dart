@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
+import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -45,7 +46,8 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset('assets/images/entrega.jpg', height: 50, width: 50),
+                  Image.asset('assets/images/entrega.jpg',
+                      height: 50, width: 50),
                   const SizedBox(height: 10),
                   const Text(
                     'ENTREGAJÁ',
@@ -75,17 +77,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => EntregaCadastroPage()),
+                    MaterialPageRoute(
+                        builder: (context) => EntregaCadastroPage()),
                   );
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
               ),
             ],
-            ListTile(
-              title: const Text('Excluir Entregas'),
-              onTap: () {},
-              contentPadding: EdgeInsets.only(left: 50.0),
-            ),
             ListTile(
               leading: Icon(Icons.person),
               title: const Text('Entregadores'),
@@ -97,7 +95,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => EntregadorCadastroPage()),
+                    MaterialPageRoute(
+                        builder: (context) => EntregadorCadastroPage()),
                   );
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
@@ -128,7 +127,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ClienteCadastroPage()),
+                    MaterialPageRoute(
+                        builder: (context) => ClienteCadastroPage()),
                   );
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
@@ -143,7 +143,11 @@ class _DashboardPageState extends State<DashboardPage> {
               ListTile(
                 title: const Text('Listar Clientes'),
                 onTap: () {
-                  // Navegar para a tela de listar clientes
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ClienteListagemPage()),
+                  );
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
               ),
@@ -181,9 +185,12 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildDeliveryColumn('Entregas Pendentes', Colors.red.shade800, Colors.red.shade300),
-                  _buildDeliveryColumn('Entregas Futuras', Colors.orange.shade800, Colors.orange.shade300),
-                  _buildDeliveryColumn('Entregas Concluídas', Colors.green.shade800, Colors.green.shade300),
+                  _buildDeliveryColumn('Entregas Pendentes',
+                      Colors.red.shade800, Colors.red.shade300),
+                  _buildDeliveryColumn('Entregas Futuras',
+                      Colors.orange.shade800, Colors.orange.shade300),
+                  _buildDeliveryColumn('Entregas Concluídas',
+                      Colors.green.shade800, Colors.green.shade300),
                 ],
               ),
             ),
@@ -193,7 +200,8 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildDeliveryColumn(String title, Color headerColor, Color cardColor) {
+  Widget _buildDeliveryColumn(
+      String title, Color headerColor, Color cardColor) {
     return Expanded(
       child: Column(
         children: [
@@ -215,7 +223,8 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Container(
               color: cardColor,
               child: ListView.builder(
-                itemCount: 3, // Este número pode ser dinâmico, conforme necessário
+                itemCount:
+                    3, // Este número pode ser dinâmico, conforme necessário
                 itemBuilder: (context, index) {
                   return Card(
                     margin: EdgeInsets.all(10),
@@ -224,7 +233,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('1 Tinta exterior branco 18lt,\n1 Rolo 23cm atlas, 2 lixas ferro 180, 5 trinchas 395'),
+                          Text(
+                              '1 Tinta exterior branco 18lt,\n1 Rolo 23cm atlas, 2 lixas ferro 180, 5 trinchas 395'),
                           SizedBox(height: 5),
                           Text('Data: 01/09/2024'),
                         ],
@@ -232,7 +242,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Entrega concluída', style: TextStyle(color: Colors.green)),
+                          Text('Entrega concluída',
+                              style: TextStyle(color: Colors.green)),
                           Icon(Icons.check_circle, color: Colors.green),
                         ],
                       ),
