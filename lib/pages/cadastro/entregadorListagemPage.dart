@@ -1,64 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
-import 'package:flutter_projeto/pages/cadastro/editClientePage.dart';
+import 'package:flutter_projeto/pages/cadastro/editEntregadorPage.dart';
 
-class ClienteListagemPage extends StatefulWidget {
+class EntregadorListagemPage extends StatefulWidget {
   @override
-  _ClienteListagemPageState createState() => _ClienteListagemPageState();
+  _EntregadorListagemPageState createState() => _EntregadorListagemPageState();
 }
 
-class _ClienteListagemPageState extends State<ClienteListagemPage> {
+class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  List<Map<String, dynamic>> _clientes = [];
+  List<Map<String, dynamic>> _entregadores = [];
 
   @override
   void initState() {
     super.initState();
-    _listarClientes();
+    _listarEntregadores();
   }
 
-  Future<void> _listarClientes() async {
+  Future<void> _listarEntregadores() async {
     try {
       await _databaseHelper.connect();
-      _clientes = await _databaseHelper.listarClientes();
+      _entregadores = await _databaseHelper.listarEntregadores();
+      _entregadores.forEach((entregador) {
+        if (entregador['id_Entregador'] == null) {
+          print(
+              'Erro: ID do entregador é nulo para o entregador ${entregador['nome']}');
+        }
+      });
       setState(() {});
     } catch (e) {
-      print('Erro ao listar clientes: $e');
+      print('Erro ao listar entregadores: $e');
     } finally {
       await _databaseHelper.closeConnection();
     }
   }
 
-  Future<void> _deletarCliente(int id) async {
+  Future<void> _deletarEntregador(int id) async {
     try {
       await _databaseHelper.connect();
-      await _databaseHelper.deleteCliente(id);
-      await _listarClientes(); // Atualiza a lista após deletar
+      await _databaseHelper.deleteEntregador(id);
+      await _listarEntregadores(); // Atualiza a lista após deletar
     } catch (e) {
-      print('Erro ao deletar cliente: $e');
+      print('Erro ao deletar entregador: $e');
     } finally {
       await _databaseHelper.closeConnection();
     }
   }
 
-  Future<void> _editarCliente(int id) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditClientePage(clienteId: id),
-      ),
-    );
-
-    if (result == true) {
-      _listarClientes(); // Atualiza a lista após editar
-    }
+  Future<void> _editarEntregador(int id) async {
+    // Lógica para editar entregador
+    // Navegar para uma página de edição ou abrir um diálogo para editar os dados do entregador
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Clientes Cadastrados'),
+        title: const Text('Entregadores Cadastrados'),
         backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
         centerTitle: true,
         titleTextStyle: TextStyle(
@@ -67,7 +65,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: _clientes.isEmpty
+      body: _entregadores.isEmpty
           ? Center(
               child: CircularProgressIndicator(
                 color: Color(0xFFFF0000), // Cor igual ao padrão
@@ -75,26 +73,28 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
             )
           : ListView.builder(
               padding: const EdgeInsets.all(8.0),
-              itemCount: _clientes.length,
+              itemCount: _entregadores.length,
               itemBuilder: (context, index) {
-                final cliente = _clientes[index];
-                final id = cliente['id'];
+                final entregador = _entregadores[index];
+                final id = entregador['id_Entregador'];
+                print('Entregador ID: $id'); // Verificação para depuração
 
                 return Card(
                   elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16.0),
                     leading: Icon(
-                      Icons.person,
+                      Icons.local_shipping,
                       size: 50,
                       color: Color(0xFFFF0000), // Cor igual ao padrão
                     ),
                     title: Text(
-                      cliente['nome'] ?? 'Nome',
+                      entregador['nome'] ?? 'Nome',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -108,28 +108,27 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                           children: [
                             Icon(Icons.phone, size: 16, color: Colors.grey),
                             SizedBox(width: 5),
-                            Text('Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
+                            Text(
+                                'Telefone: ${entregador['telefone'] ?? 'Telefone'}'),
                           ],
                         ),
                         SizedBox(height: 5),
                         Row(
                           children: [
-                            Icon(Icons.email, size: 16, color: Colors.grey),
+                            Icon(Icons.card_membership,
+                                size: 16, color: Colors.grey),
                             SizedBox(width: 5),
-                            Text('Email: ${cliente['email'] ?? 'Email'}'),
+                            Text('CNH: ${entregador['cnh'] ?? 'CNH'}'),
                           ],
                         ),
                         SizedBox(height: 5),
                         Row(
                           children: [
-                            Icon(Icons.location_on, size: 16, color: Colors.grey),
+                            Icon(Icons.directions_car,
+                                size: 16, color: Colors.grey),
                             SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                'Endereço: ${cliente['rua'] ?? 'Rua'}, ${cliente['numero'] ?? 'Número'}, ${cliente['bairro'] ?? 'Bairro'}, ${cliente['cidade'] ?? 'Cidade'}, ${cliente['estado'] ?? 'Estado'}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                            Text(
+                                'Veículo: ${entregador['veiculo'] ?? 'Veículo'}'),
                           ],
                         ),
                       ],
@@ -140,11 +139,22 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                             children: [
                               IconButton(
                                 icon: Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _editarCliente(id),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          EditEntregadorPage(entregadorId: id),
+                                    ),
+                                  );
+                                },
                               ),
                               IconButton(
                                 icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deletarCliente(id),
+                                onPressed: () {
+                                  // Chama o método de deletar entregador
+                                  _deletarEntregador(id);
+                                },
                               ),
                             ],
                           )

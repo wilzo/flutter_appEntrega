@@ -40,7 +40,8 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     try {
       await _databaseHelper.createCliente(nome, telefone, email, enderecoId);
 
-      Navigator.pop(context); // Navegar de volta ou para a página desejada
+      // Mostrar pop-up de sucesso
+      _showSuccessDialog();
     } catch (e) {
       print('Erro ao cadastrar cliente: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +65,36 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
         _enderecoSelecionado = resultado;
       });
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Cadastro Realizado!',
+            style: TextStyle(
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text('O cliente foi cadastrado com sucesso!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fechar o pop-up
+                Navigator.pop(context); // Navegar de volta para a tela anterior
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

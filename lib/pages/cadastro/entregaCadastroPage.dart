@@ -84,7 +84,7 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: const Color.fromARGB(255, 255, 0, 0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

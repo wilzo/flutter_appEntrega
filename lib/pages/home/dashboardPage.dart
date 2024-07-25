@@ -3,6 +3,8 @@ import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
+import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
+
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -111,7 +113,11 @@ class _DashboardPageState extends State<DashboardPage> {
               ListTile(
                 title: const Text('Listar Entregadores'),
                 onTap: () {
-                  // Navegar para a tela de listar entregadores
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => EntregadorListagemPage()),
+                  );
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
               ),

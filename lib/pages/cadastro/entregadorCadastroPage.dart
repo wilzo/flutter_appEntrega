@@ -85,7 +85,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: const Color.fromARGB(255, 255, 17, 0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +93,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
                   Image.asset('assets/images/entrega.jpg', height: 50, width: 50),
                   const SizedBox(height: 10),
                   const Text(
-                    'ENTREGAJÁ',
+                    'ENTREGA JÁ',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,

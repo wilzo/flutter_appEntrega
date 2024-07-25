@@ -28,7 +28,8 @@ class DatabaseHelper {
     ''');
   }
 
-  Future<void> createUser(String username, String email, String password) async {
+  Future<void> createUser(
+      String username, String email, String password) async {
     if (_connection == null) {
       await connect();
     }
@@ -85,10 +86,10 @@ class DatabaseHelper {
   }
 
   Future<void> createClienteTable() async {
-  if (_connection == null) {
-    await connect();
-  }
-  await _connection!.execute('''
+    if (_connection == null) {
+      await connect();
+    }
+    await _connection!.execute('''
     CREATE TABLE IF NOT EXISTS clientes (
       id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL,
@@ -97,27 +98,29 @@ class DatabaseHelper {
       endereco_id INTEGER REFERENCES endereco(id) ON DELETE SET NULL
     )
   ''');
-}
-Future<void> createCliente(String nome, String telefone, String email, int? enderecoId) async {
-  if (_connection == null) {
-    await connect();
   }
 
-  String query = '''
+  Future<void> createCliente(
+      String nome, String telefone, String email, int? enderecoId) async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    String query = '''
     INSERT INTO clientes (nome, telefone, email, endereco_id)
     VALUES (\$1, \$2, \$3, \$4)
   ''';
 
-  await _connection!.execute(
-    query,
-    parameters: [
-      nome,
-      telefone,
-      email,
-      enderecoId,
-    ],
-  );
-}
+    await _connection!.execute(
+      query,
+      parameters: [
+        nome,
+        telefone,
+        email,
+        enderecoId,
+      ],
+    );
+  }
 
   Future<void> createEntregadorTable() async {
     if (_connection == null) {
@@ -135,10 +138,7 @@ Future<void> createCliente(String nome, String telefone, String email, int? ende
   }
 
   Future<void> cadastrarEntregador(
-    String nome,
-    String telefone,
-    String cnh,
-    String veiculo) async {
+      String nome, String telefone, String cnh, String veiculo) async {
     if (_connection == null) {
       await connect();
     }
@@ -169,12 +169,8 @@ Future<void> createCliente(String nome, String telefone, String email, int? ende
     ''');
   }
 
-  Future<void> createEndereco(
-    String rua,
-    String numero,
-    String bairro,
-    String cidade,
-    String estado) async {
+  Future<void> createEndereco(String rua, String numero, String bairro,
+      String cidade, String estado) async {
     if (_connection == null) {
       await connect();
     }
@@ -190,12 +186,8 @@ Future<void> createCliente(String nome, String telefone, String email, int? ende
     );
   }
 
-  Future<Map<String, dynamic>?> getEndereco(
-    String rua,
-    String numero,
-    String bairro,
-    String cidade,
-    String estado) async {
+  Future<Map<String, dynamic>?> getEndereco(String rua, String numero,
+      String bairro, String cidade, String estado) async {
     if (_connection == null) {
       await connect();
     }
@@ -213,12 +205,8 @@ Future<void> createCliente(String nome, String telefone, String email, int? ende
     return results.first.toColumnMap();
   }
 
-  Future<bool> verificarEnderecoExiste(
-    String rua,
-    String numero,
-    String bairro,
-    String cidade,
-    String estado) async {
+  Future<bool> verificarEnderecoExiste(String rua, String numero, String bairro,
+      String cidade, String estado) async {
     if (_connection == null) {
       await connect();
     }
@@ -236,21 +224,20 @@ Future<void> createCliente(String nome, String telefone, String email, int? ende
   }
 
   // Método para listar todos os endereços
-Future<List<Map<String, dynamic>>> listarEndereco() async {
-  if (_connection == null) {
-    await connect();
+  Future<List<Map<String, dynamic>>> listarEndereco() async {
+    if (_connection == null) {
+      await connect();
+    }
+    final results = await _connection!.execute(
+        'SELECT id, rua, numero, bairro, cidade, estado FROM endereco');
+    return results.map((row) => row.toColumnMap()).toList();
   }
-  final results = await _connection!.execute(
-    'SELECT id, rua, numero, bairro, cidade, estado FROM endereco'
-  );
-  return results.map((row) => row.toColumnMap()).toList();
-}
 
   Future<List<Map<String, dynamic>>> listarClientes() async {
     if (_connection == null) {
       await connect();
     }
-    
+
     final results = await _connection!.execute('''
       SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
       FROM clientes c
@@ -260,4 +247,185 @@ Future<List<Map<String, dynamic>>> listarEndereco() async {
     return results.map((row) => row.toColumnMap()).toList();
   }
   
+  
+   Future<List<Map<String, dynamic>>> listarEntregadores() async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    final results = await _connection!.execute('''
+      SELECT id_Entregador, nome, telefone, cnh, veiculo
+      FROM entregador
+    ''');
+
+    final entregadores = results.map((row) {
+      final entregador = {
+        'id_Entregador': row[0],
+        'nome': row[1],
+        'telefone': row[2],
+        'cnh': row[3],
+        'veiculo': row[4],
+      };
+      print('Row data: $entregador');
+      return entregador;
+    }).toList();
+
+    return entregadores;
+  }
+  Future<void> deleteEntregador(int id) async {
+  if (_connection == null) {
+    throw Exception("Connection is not established");
+  }
+
+  print('Tentando deletar entregador com ID: $id');
+
+  try {
+    await _connection!.execute(
+      r'DELETE FROM entregador WHERE id_Entregador = $1',
+      parameters: [id], // O valor do parâmetro é passado aqui
+    );
+  } catch (e) {
+    print('Erro ao deletar entregador: $e');
+  }
+
+    Future<List<Map<String, dynamic>>> listarClientes() async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    final results = await _connection!.execute('''
+      SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
+      FROM clientes c
+      LEFT JOIN endereco e ON c.endereco_id = e.id
+    ''');
+
+    return results.map((row) => row.toColumnMap()).toList();
+  }
+
+  Future<void> deleteCliente(int id) async {
+    if (_connection == null) {
+      throw Exception("Connection is not established");
+    }
+
+    print('Tentando deletar cliente com ID: $id');
+
+    try {
+      await _connection!.execute(
+        r'DELETE FROM clientes WHERE id = $1',
+        parameters: [id], // O valor do parâmetro é passado aqui
+      );
+    } catch (e) {
+      print('Erro ao deletar cliente: $e');
+    }
+  }
+}
+
+
+Future<Map<String, dynamic>?> listarEntregadorPorId(int id) async {
+  if (_connection == null) {
+    await connect();
+  }
+  
+  try {
+    final results = await _connection!.execute(
+      'SELECT id_Entregador, nome, telefone, cnh, veiculo FROM entregador WHERE id_Entregador = $id',
+      parameters: [id],
+    );
+    
+    if (results.isEmpty) return null;
+    return results.first.toColumnMap();
+  } catch (e) {
+    print('Erro ao listar entregador por ID: $e');
+    return null;
+  }
+}
+Future<void> deleteCliente(int id) async {
+  if (_connection == null) {
+    throw Exception("Connection is not established");
+  }
+
+  try {
+    await _connection!.execute(
+      r'DELETE FROM clientes WHERE id = $1',
+      parameters: [id],
+    );
+  } catch (e) {
+    print('Erro ao deletar cliente: $e');
+  }
+}
+
+
+
+  Future<void> updateEntregador(int id, String nome, String telefone, String cnh, String veiculo) async {
+  if (_connection == null) {
+    throw Exception("Connection is not established");
+  }
+
+  try {
+    await _connection!.execute(
+      r'''
+      UPDATE entregador
+      SET nome = $2, telefone = $3, cnh = $4, veiculo = $5
+      WHERE id_Entregador = $1
+      ''',
+      parameters: [
+        id,       // $1
+        nome,     // $2
+        telefone, // $3
+        cnh,      // $4
+        veiculo,  // $5
+      ],
+    );
+  } catch (e) {
+    print('Erro ao atualizar entregador: $e');
+  }
+}
+
+Future<void> updateCliente(int id, String nome, String telefone, String email, int? enderecoId) async {
+  if (_connection == null) {
+    throw Exception("Connection is not established");
+  }
+
+  try {
+    await _connection!.execute(
+      r'''
+      UPDATE clientes
+      SET nome = $2, telefone = $3, email = $4, endereco_id = $5
+      WHERE id = $1
+      ''',
+      parameters: [
+        id,       // $1
+        nome,     // $2
+        telefone, // $3
+        email,    // $4
+        enderecoId // $5
+      ],
+    );
+  } catch (e) {
+    print('Erro ao atualizar cliente: $e');
+  }
+}
+Future<Map<String, dynamic>?> listarClientePorId(int id) async {
+  if (_connection == null) {
+    await connect();
+  }
+
+  try {
+    final results = await _connection!.execute(
+      r'''
+      SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
+      FROM clientes c
+      LEFT JOIN endereco e ON c.endereco_id = e.id
+      WHERE c.id = $1
+      ''',
+      parameters: [id],
+    );
+
+    if (results.isEmpty) return null;
+    return results.first.toColumnMap();
+  } catch (e) {
+    print('Erro ao listar cliente por ID: $e');
+    return null;
+  }
+}
 }
