@@ -4,7 +4,30 @@ import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
+import 'package:postgres/postgres.dart'; // Adicione a biblioteca postgres
 
+class Delivery {
+  final String id;
+  final String descricao;
+  final DateTime data;
+  final String status;
+
+  Delivery({
+    required this.id,
+    required this.descricao,
+    required this.data,
+    required this.status,
+  });
+
+  factory Delivery.fromMap(Map<String, dynamic> map) {
+    return Delivery(
+      id: map['id_Entrega'].toString(),
+      descricao: map['descricao'],
+      data: DateTime.parse(map['data']),
+      status: map['status'],
+    );
+  }
+}
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -15,6 +38,42 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _showClienteOptions = false;
   bool _showEntregadorOptions = false;
   bool _showEntregaOptions = false;
+
+  final List<Delivery> _deliveries = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDeliveries();
+  }
+
+  Future<void> _fetchDeliveries() async {
+    final connection = PostgreSQLConnection(
+      'localhost', // Endereço do servidor
+      5432, // Porta do banco de dados
+      'nome_do_banco', // Nome do banco de dados
+      username: 'seu_usuario', // Seu usuário
+      password: 'sua_senha', // Sua senha
+    );
+
+    await connection.open();
+    
+    final results = await connection.query('SELECT * FROM entregas');
+    final deliveries = results.map((row) {
+      return Delivery.fromMap({
+        'id_Entrega': row[0],
+        'descricao': row[1],
+        'data': row[2].toString(),
+        'status': row[3],
+      });
+    }).toList();
+
+    setState(() {
+      _deliveries.addAll(deliveries);
+    });
+
+    await connection.close();
+  }
 
   void _toggleClienteOptions() {
     setState(() {
@@ -103,13 +162,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
               ),
-              ListTile(
-                title: const Text('Excluir Entregador'),
-                onTap: () {
-                  // Navegar para a tela de excluir entregador
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
+             
               ListTile(
                 title: const Text('Listar Entregadores'),
                 onTap: () {
@@ -139,13 +192,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
                 contentPadding: EdgeInsets.only(left: 50.0),
               ),
-              ListTile(
-                title: const Text('Excluir Cliente'),
-                onTap: () {
-                  // Navegar para a tela de excluir cliente
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
+              
               ListTile(
                 title: const Text('Listar Clientes'),
                 onTap: () {
@@ -158,11 +205,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 contentPadding: EdgeInsets.only(left: 50.0),
               ),
             ],
-            ListTile(
-              leading: Icon(Icons.map),
-              title: const Text('Mapa de Entregas'),
-              onTap: () {},
-            ),
           ],
         ),
       ),
@@ -192,11 +234,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildDeliveryColumn('Entregas Pendentes',
-                      Colors.red.shade800, Colors.red.shade300),
+                      Colors.red.shade800, Colors.red.shade300, 'Pendente'),
                   _buildDeliveryColumn('Entregas Futuras',
-                      Colors.orange.shade800, Colors.orange.shade300),
+                      Colors.orange.shade800, Colors.orange.shade300, 'Futura'),
                   _buildDeliveryColumn('Entregas Concluídas',
-                      Colors.green.shade800, Colors.green.shade300),
+                      Colors.green.shade800, Colors.green.shade300, 'Concluída'),
                 ],
               ),
             ),
@@ -207,7 +249,11 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildDeliveryColumn(
-      String title, Color headerColor, Color cardColor) {
+      String title, Color headerColor, Color cardColor, String statusFilter) {
+    final filteredDeliveries = _deliveries
+        .where((delivery) => delivery.status == statusFilter)
+        .toList();
+
     return Expanded(
       child: Column(
         children: [
@@ -229,28 +275,38 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Container(
               color: cardColor,
               child: ListView.builder(
-                itemCount:
-                    3, // Este número pode ser dinâmico, conforme necessário
+                itemCount: filteredDeliveries.length,
                 itemBuilder: (context, index) {
+                  final delivery = filteredDeliveries[index];
                   return Card(
                     margin: EdgeInsets.all(10),
                     child: ListTile(
-                      title: Text('Entrega #$index'),
+                      title: Text('Entrega ${delivery.id}'),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                              '1 Tinta exterior branco 18lt,\n1 Rolo 23cm atlas, 2 lixas ferro 180, 5 trinchas 395'),
+                          Text(delivery.descricao),
                           SizedBox(height: 5),
-                          Text('Data: 01/09/2024'),
+                          Text('Data: ${delivery.data.toLocal().toString().split(' ')[0]}'),
                         ],
                       ),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Entrega concluída',
-                              style: TextStyle(color: Colors.green)),
-                          Icon(Icons.check_circle, color: Colors.green),
+                          Text(delivery.status,
+                              style: TextStyle(
+                                color: delivery.status == 'Concluída'
+                                    ? Colors.green
+                                    : Colors.red,
+                              )),
+                          Icon(
+                            delivery.status == 'Concluída'
+                                ? Icons.check_circle
+                                : Icons.access_time,
+                            color: delivery.status == 'Concluída'
+                                ? Colors.green
+                                : Colors.red,
+                          ),
                         ],
                       ),
                     ),

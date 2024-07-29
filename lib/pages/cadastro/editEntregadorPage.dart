@@ -91,7 +91,7 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-       title: const Text('Cadastrar Entregador'),
+       title: const Text('Editar Entregador'),
         backgroundColor: const Color.fromARGB(255, 245, 16, 0),
         centerTitle: true,
         titleTextStyle: TextStyle(

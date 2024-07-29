@@ -1,4 +1,6 @@
 import 'package:postgres/postgres.dart';
+import 'package:intl/intl.dart';
+
 import '../database/config.dart';
 
 class DatabaseHelper {
@@ -428,4 +430,127 @@ Future<Map<String, dynamic>?> listarClientePorId(int id) async {
     return null;
   }
 }
+
+Future<void> createItensTable() async {
+    if (_connection == null) {
+      await connect();
+    }
+    await _connection!.execute('''
+      CREATE TABLE IF NOT EXISTS itens (
+        id_Itens SERIAL PRIMARY KEY,
+        descricao VARCHAR(255) NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> createEntregasTable() async {
+    if (_connection == null) {
+      await connect();
+    }
+    await _connection!.execute('''
+      CREATE TABLE IF NOT EXISTS entregas (
+        id_Entrega SERIAL PRIMARY KEY,
+        data DATE NOT NULL,
+        hora_Entrega VARCHAR(100) NOT NULL,
+        id_Entregador INTEGER REFERENCES entregador(id_Entregador) ON DELETE SET NULL,
+        id_Cliente INTEGER REFERENCES clientes(id) ON DELETE SET NULL,
+        id_Itens INTEGER REFERENCES itens_entrega(id_Itens) ON DELETE SET NULL
+      )
+    ''');
+  }
+
+  Future<void> createEntrega(
+  DateTime dataEntrega,
+  String horaEntrega,
+  int idEntregador,
+  int idCliente,
+  int idItens
+) async {
+  if (_connection == null) {
+    await connect();
+  }
+
+  // Formatar data e hora no formato que o banco de dados espera
+  String formattedData = DateFormat('yyyy-MM-dd').format(dataEntrega);
+
+  // Ajustar o formato da hora, se necessário
+  // No caso de já estar no formato correto, apenas passe o valor recebido
+  String formattedHora = horaEntrega;
+
+  String query = '''
+    INSERT INTO entregas (data, hora_Entrega, id_Entregador, id_Cliente, id_Itens)
+    VALUES (\$1, \$2, \$3, \$4, \$5)
+  ''';
+
+  await _connection!.execute(
+    query,
+    parameters: [
+      formattedData,
+      formattedHora,
+      idEntregador,
+      idCliente,
+      idItens,
+    ],
+  );
+}
+  Future<List<Map<String, dynamic>>> listarEntregas() async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    final results = await _connection!.execute('''
+      SELECT e.id_Entrega, e.data, e.hora_Entrega, ent.nome AS entregador_nome, c.nome AS cliente_nome, i.descricao
+      FROM entregas e
+      LEFT JOIN entregadores ent ON e.id_Entregador = ent.id_Entregador
+      LEFT JOIN clientes c ON e.id_Cliente = c.id
+      LEFT JOIN itens i ON e.id_Itens = i.id_Itens
+    ''');
+
+    return results.map((row) => row.toColumnMap()).toList();
+  }
+
+   Future<void> createItensEntregaTable() async {
+    if (_connection == null) {
+      await connect();
+    }
+    await _connection!.execute('''
+      CREATE TABLE IF NOT EXISTS itens_entrega (
+        id_Itens SERIAL PRIMARY KEY,
+        descricao VARCHAR(255) NOT NULL
+      )
+    ''');
+  }
+
+  Future<int?> createItem(String descricao) async {
+    if (_connection == null) {
+      await connect();
+    }
+    try {
+      final result = await _connection!.execute(
+        'INSERT INTO itens_entrega (descricao) VALUES (\$1) RETURNING id_Itens',
+        parameters:[descricao],
+      );
+      return result.isNotEmpty ? result[0][0] as int : null;
+    } catch (e) {
+      print('Erro ao adicionar item: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getItens() async {
+    if (_connection == null) {
+      await connect();
+    }
+    try {
+      final result = await _connection!.execute('SELECT * FROM itens');
+      return result.map((row) => {
+        'id': row[0],
+        'descricao': row[1],
+      }).toList();
+    } catch (e) {
+      print('Erro ao obter itens: $e');
+      return [];
+    }
+  }
+
 }

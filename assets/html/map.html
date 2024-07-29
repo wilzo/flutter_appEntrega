@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaflet Map</title>
+  <style>
+    body { margin: 0; }
+    #map { width: 100vw; height: 100vh; }
+  </style>
+  <!-- Inclua o CSS do Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <!-- Div onde o mapa será exibido -->
+  <div id="map"></div>
+
+  <!-- Inclua o script do Leaflet -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Crie o mapa
+    var map = L.map('map').setView([51.5, -0.09], 13); // Coordenadas e nível de zoom iniciais
+
+    // Adicione uma camada de tiles (por exemplo, OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Adicione um marcador
+    L.marker([51.5, -0.09]).addTo(map)
+      .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+      .openPopup();
+  </script>
+</body>
+</html>
