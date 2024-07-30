@@ -3,6 +3,14 @@ import 'package:flutter_projeto/pages/cadastro/clienteSelecaoPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorSelecaoPage.dart';
 import 'package:flutter_projeto/pages/cadastro/ItemSelecaoPage.dart'; // Importe a página de listagem de itens
 import 'package:flutter_projeto/models/databaseHelper.dart';
+import 'package:flutter_projeto/models/endereco_service.dart';
+import 'package:flutter_projeto/models/cliente_service.dart';
+import 'package:flutter_projeto/models/entrega_service.dart';
+import 'package:flutter_projeto/models/entregador_service.dart';
+import 'package:flutter_projeto/models/itens_service.dart';
+import 'package:flutter_projeto/models/user_services.dart';
+
+
 import 'package:intl/intl.dart';
 
 class EntregaCadastroPage extends StatefulWidget {

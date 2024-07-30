@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
 import 'package:flutter_projeto/models/databaseHelper.dart';
 
+import 'package:flutter_projeto/models/endereco_service.dart';
+import 'package:flutter_projeto/models/cliente_service.dart';
+import 'package:flutter_projeto/models/entrega_service.dart';
+import 'package:flutter_projeto/models/entregador_service.dart';
+import 'package:flutter_projeto/models/itens_service.dart';
+import 'package:flutter_projeto/models/user_services.dart';
+
 class ClienteCadastroPage extends StatefulWidget {
   @override
   _ClienteCadastroPageState createState() => _ClienteCadastroPageState();

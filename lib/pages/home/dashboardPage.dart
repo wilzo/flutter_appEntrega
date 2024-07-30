@@ -4,7 +4,6 @@ import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
-import 'package:postgres/postgres.dart'; // Adicione a biblioteca postgres
 
 class Delivery {
   final String id;
@@ -18,15 +17,6 @@ class Delivery {
     required this.data,
     required this.status,
   });
-
-  factory Delivery.fromMap(Map<String, dynamic> map) {
-    return Delivery(
-      id: map['id_Entrega'].toString(),
-      descricao: map['descricao'],
-      data: DateTime.parse(map['data']),
-      status: map['status'],
-    );
-  }
 }
 
 class DashboardPage extends StatefulWidget {
@@ -39,41 +29,11 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _showEntregadorOptions = false;
   bool _showEntregaOptions = false;
 
-  final List<Delivery> _deliveries = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchDeliveries();
-  }
-
-  Future<void> _fetchDeliveries() async {
-    final connection = PostgreSQLConnection(
-      'localhost', // Endereço do servidor
-      5432, // Porta do banco de dados
-      'nome_do_banco', // Nome do banco de dados
-      username: 'seu_usuario', // Seu usuário
-      password: 'sua_senha', // Sua senha
-    );
-
-    await connection.open();
-    
-    final results = await connection.query('SELECT * FROM entregas');
-    final deliveries = results.map((row) {
-      return Delivery.fromMap({
-        'id_Entrega': row[0],
-        'descricao': row[1],
-        'data': row[2].toString(),
-        'status': row[3],
-      });
-    }).toList();
-
-    setState(() {
-      _deliveries.addAll(deliveries);
-    });
-
-    await connection.close();
-  }
+  final List<Delivery> deliveries = [
+    Delivery(id: '1', descricao: '1 Tinta exterior branco 18lt', data: DateTime.now(), status: 'Pendente'),
+    Delivery(id: '2', descricao: '1 Rolo 23cm atlas', data: DateTime.now().add(Duration(days: 1)), status: 'Futura'),
+    Delivery(id: '3', descricao: '2 lixas ferro 180, 5 trinchas 395', data: DateTime.now().subtract(Duration(days: 1)), status: 'Concluída'),
+  ];
 
   void _toggleClienteOptions() {
     setState(() {
@@ -250,7 +210,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildDeliveryColumn(
       String title, Color headerColor, Color cardColor, String statusFilter) {
-    final filteredDeliveries = _deliveries
+    final filteredDeliveries = deliveries
         .where((delivery) => delivery.status == statusFilter)
         .toList();
 

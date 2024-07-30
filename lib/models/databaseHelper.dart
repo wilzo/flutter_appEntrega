@@ -9,6 +9,7 @@ class DatabaseHelper {
   Future<void> connect() async {
     _connection = await database();
   }
+  Connection? get connection => _connection;
 
   Future<void> closeConnection() async {
     if (_connection != null) {
@@ -290,20 +291,7 @@ class DatabaseHelper {
     print('Erro ao deletar entregador: $e');
   }
 
-    Future<List<Map<String, dynamic>>> listarClientes() async {
-    if (_connection == null) {
-      await connect();
-    }
-
-    final results = await _connection!.execute('''
-      SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
-      FROM clientes c
-      LEFT JOIN endereco e ON c.endereco_id = e.id
-    ''');
-
-    return results.map((row) => row.toColumnMap()).toList();
-  }
-
+    
   Future<void> deleteCliente(int id) async {
     if (_connection == null) {
       throw Exception("Connection is not established");
@@ -509,18 +497,7 @@ Future<void> createItensTable() async {
     return results.map((row) => row.toColumnMap()).toList();
   }
 
-   Future<void> createItensEntregaTable() async {
-    if (_connection == null) {
-      await connect();
-    }
-    await _connection!.execute('''
-      CREATE TABLE IF NOT EXISTS itens_entrega (
-        id_Itens SERIAL PRIMARY KEY,
-        descricao VARCHAR(255) NOT NULL
-      )
-    ''');
-  }
-
+ 
   Future<int?> createItem(String descricao) async {
     if (_connection == null) {
       await connect();
