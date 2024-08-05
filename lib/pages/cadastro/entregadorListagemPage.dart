@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/editEntregadorPage.dart';
+import 'package:flutter_projeto/models/entregador_service.dart';
+
 
 class EntregadorListagemPage extends StatefulWidget {
   @override
@@ -9,6 +11,8 @@ class EntregadorListagemPage extends StatefulWidget {
 
 class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+    final EntregadorService entregadorService = EntregadorService();
+
   List<Map<String, dynamic>> _entregadores = [];
 
   @override
@@ -20,7 +24,7 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
   Future<void> _listarEntregadores() async {
     try {
       await _databaseHelper.connect();
-      _entregadores = await _databaseHelper.listarEntregadores();
+      _entregadores = await entregadorService.listarEntregadores();
       _entregadores.forEach((entregador) {
         if (entregador['id_Entregador'] == null) {
           print(
@@ -38,7 +42,7 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
   Future<void> _deletarEntregador(int id) async {
     try {
       await _databaseHelper.connect();
-      await _databaseHelper.deleteEntregador(id);
+      await entregadorService.deleteEntregador(id);
       await _listarEntregadores(); // Atualiza a lista após deletar
     } catch (e) {
       print('Erro ao deletar entregador: $e');

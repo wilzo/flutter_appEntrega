@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
+import 'package:flutter_projeto/models/itens_service.dart';
+
 
 class ItemSelecaoPage extends StatefulWidget {
   @override
@@ -8,7 +10,8 @@ class ItemSelecaoPage extends StatefulWidget {
 
 class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
   final TextEditingController _descricaoController = TextEditingController();
-  final DatabaseHelper _databaseHelper = DatabaseHelper(/* Sua conexão aqui */);
+    final ItensService _itensService = ItensService();
+
   bool _isLoading = false;
 
   void _adicionarItem() async {
@@ -29,7 +32,7 @@ class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
     }
 
     try {
-      final int? idNovoItem = await _databaseHelper.createItem(descricao);
+      final int? idNovoItem = await _itensService.createItem(descricao);
       _showSuccessDialog(idNovoItem);
     } catch (e) {
       print('Erro ao adicionar item: $e');

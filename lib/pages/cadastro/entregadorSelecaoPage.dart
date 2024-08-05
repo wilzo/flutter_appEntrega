@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
+import 'package:flutter_projeto/models/entregador_service.dart';
+
 
 class EntregadorSelecaoPage extends StatefulWidget {
   @override
@@ -8,6 +10,8 @@ class EntregadorSelecaoPage extends StatefulWidget {
 
 class _EntregadorSelecaoPageState extends State<EntregadorSelecaoPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+    final EntregadorService _entregadorService = EntregadorService();
+
   List<Map<String, dynamic>> _entregadores = [];
   bool _isLoading = false;
 
@@ -24,7 +28,7 @@ class _EntregadorSelecaoPageState extends State<EntregadorSelecaoPage> {
 
     try {
       await _databaseHelper.connect();
-      _entregadores = await _databaseHelper.listarEntregadores();
+      _entregadores = await _entregadorService.listarEntregadores();
       setState(() {});
     } catch (e) {
       print('Erro ao listar entregadores: $e');

@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/dataBaseHelper.dart'; // Certifique-se de que o caminho está correto
+import 'package:flutter_projeto/models/user_services.dart';
 import 'package:flutter_projeto/pages/login/login_page.dart'; // Ajustado para referência correta
 
 class SignupPage extends StatefulWidget {
@@ -12,6 +14,8 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+    final UserService _userService = UserService();
+
 
   @override
   void initState() {
@@ -40,7 +44,7 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     try {
-      await _databaseHelper.createUser(username, email, password);
+      await _userService.createUser(username, email, password);
       Navigator.pop(context); // Navegue para a página de login ou mostre uma mensagem de sucesso
     } catch (e) {
       print('Erro ao criar usuário: $e');

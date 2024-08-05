@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/dataBaseHelper.dart';
+import 'package:flutter_projeto/models/user_services.dart';
 import 'package:flutter_projeto/pages/login/signup_page.dart';
 import 'package:flutter_projeto/pages/main/main_page.dart';
 import 'package:flutter_projeto/pages/home/dashboardPage.dart';
@@ -13,6 +14,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+    final UserService _userService = UserService();
+
   bool _isLoading = false;
 
 void _login() async {
@@ -34,7 +37,7 @@ void _login() async {
   }
 
   try {
-    bool success = await _databaseHelper.loginUser(email, password);
+    bool success = await _userService.loginUser(email, password);
     if (success) {
       Navigator.pushReplacement(
         context,

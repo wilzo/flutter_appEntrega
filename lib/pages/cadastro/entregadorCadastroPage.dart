@@ -3,6 +3,8 @@ import 'package:flutter_projeto/pages/home/dashboardPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart'; // Adicione esta importação
+import 'package:flutter_projeto/models/entregador_service.dart';
+
 
 class EntregadorCadastroPage extends StatefulWidget {
   @override
@@ -16,7 +18,9 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
   final TextEditingController _veiculoController = TextEditingController();
   bool _isLoading = false;
 
-  final DatabaseHelper _databaseHelper = DatabaseHelper(); // Instanciar o DatabaseHelper
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  
+  final EntregadorService _entregadorService = EntregadorService(); // Instanciar o DatabaseHelper
 
   bool _showClienteOptions = false;
   bool _showEntregadorOptions = false;
@@ -61,8 +65,8 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
     }
 
     try {
-      await _databaseHelper.createEntregadorTable();
-      await _databaseHelper.cadastrarEntregador(nome, telefone, email, veiculo); // Chame o método para cadastrar entregador
+      await _entregadorService.createEntregadorTable();
+      await _entregadorService.cadastrarEntregador(nome, telefone, email, veiculo); // Chame o método para cadastrar entregador
       Navigator.pop(context); // Navegar de volta ou para a página desejada
     } catch (e) {
       print('Erro ao cadastrar entregador: $e');

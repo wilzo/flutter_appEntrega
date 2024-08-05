@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
-
-import 'package:flutter_projeto/models/endereco_service.dart';
-import 'package:flutter_projeto/models/cliente_service.dart';
-import 'package:flutter_projeto/models/entrega_service.dart';
 import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
+
 class EditEntregadorPage extends StatefulWidget {
   final int entregadorId;
 
@@ -17,6 +12,7 @@ class EditEntregadorPage extends StatefulWidget {
 }
 
 class _EditEntregadorPageState extends State<EditEntregadorPage> {
+  final EntregadorService _entregadorService = EntregadorService();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   late TextEditingController _nomeController;
   late TextEditingController _telefoneController;
@@ -37,7 +33,8 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
   Future<void> _carregarDados() async {
     try {
       await _databaseHelper.connect();
-      final entregador = await _databaseHelper.listarEntregadorPorId(widget.entregadorId);
+      final entregador =
+          await _entregadorService.listarEntregadorPorId(widget.entregadorId);
 
       if (entregador != null) {
         setState(() {
@@ -63,7 +60,7 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
 
     try {
       await _databaseHelper.connect();
-      await _databaseHelper.updateEntregador(
+      await _entregadorService.updateEntregador(
         widget.entregadorId,
         _nomeController.text,
         _telefoneController.text,
@@ -97,7 +94,7 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-       title: const Text('Editar Entregador'),
+        title: const Text('Editar Entregador'),
         backgroundColor: const Color.fromARGB(255, 245, 16, 0),
         centerTitle: true,
         titleTextStyle: TextStyle(
@@ -108,7 +105,8 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 200.0, vertical: 30.0),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 200.0, vertical: 30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -159,7 +157,8 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _atualizarEntregador,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 255, 17, 0), // Cor de fundo
+                    backgroundColor:
+                        const Color.fromARGB(255, 255, 17, 0), // Cor de fundo
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -186,7 +185,8 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hintText) {
+  Widget _buildTextField(
+      String label, TextEditingController controller, String hintText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

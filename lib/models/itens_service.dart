@@ -14,8 +14,7 @@ class ItensService {
     }
   }
 
-
-Future<void> createItensTable() async {
+  Future<void> createItensTable() async {
     if (_connection == null) {
       await connect();
     }
@@ -26,14 +25,15 @@ Future<void> createItensTable() async {
       )
     ''');
   }
- Future<int?> createItem(String descricao) async {
+
+  Future<int?> createItem(String descricao) async {
     if (_connection == null) {
       await connect();
     }
     try {
       final result = await _connection!.execute(
         'INSERT INTO itens_entrega (descricao) VALUES (\$1) RETURNING id_Itens',
-        parameters:[descricao],
+        parameters: [descricao],
       );
       return result.isNotEmpty ? result[0][0] as int : null;
     } catch (e) {
@@ -48,14 +48,15 @@ Future<void> createItensTable() async {
     }
     try {
       final result = await _connection!.execute('SELECT * FROM itens');
-      return result.map((row) => {
-        'id': row[0],
-        'descricao': row[1],
-      }).toList();
+      return result
+          .map((row) => {
+                'id': row[0],
+                'descricao': row[1],
+              })
+          .toList();
     } catch (e) {
       print('Erro ao obter itens: $e');
       return [];
     }
   }
-
 }

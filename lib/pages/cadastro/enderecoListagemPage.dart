@@ -3,11 +3,6 @@ import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/enderecoCadastroPage.dart';
 
 import 'package:flutter_projeto/models/endereco_service.dart';
-import 'package:flutter_projeto/models/cliente_service.dart';
-import 'package:flutter_projeto/models/entrega_service.dart';
-import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
 class EnderecoListagemPage extends StatefulWidget {
   @override
   _EnderecoListagemPageState createState() => _EnderecoListagemPageState();
@@ -15,6 +10,8 @@ class EnderecoListagemPage extends StatefulWidget {
 
 class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+      final EnderecoService _enderecoService = EnderecoService();
+
   List<Map<String, dynamic>> _enderecos = [];
 
   @override
@@ -26,7 +23,7 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
   Future<void> _listarEnderecos() async {
     try {
       await _databaseHelper.connect();
-      _enderecos = await _databaseHelper.listarEndereco();
+      _enderecos = await _enderecoService.listarEndereco();
       setState(() {});
     } catch (e) {
       print('Erro ao listar endereços: $e');

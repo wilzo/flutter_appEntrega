@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/editClientePage.dart';
-
-import 'package:flutter_projeto/models/endereco_service.dart';
 import 'package:flutter_projeto/models/cliente_service.dart';
-import 'package:flutter_projeto/models/entrega_service.dart';
-import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
 
 class ClienteListagemPage extends StatefulWidget {
   @override
@@ -16,6 +10,8 @@ class ClienteListagemPage extends StatefulWidget {
 
 class _ClienteListagemPageState extends State<ClienteListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final ClienteService _clienteService = ClienteService();
+
   List<Map<String, dynamic>> _clientes = [];
 
   @override
@@ -27,7 +23,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
   Future<void> _listarClientes() async {
     try {
       await _databaseHelper.connect();
-      _clientes = await _databaseHelper.listarClientes();
+      _clientes = await _clienteService.listarClientes();
       setState(() {});
     } catch (e) {
       print('Erro ao listar clientes: $e');
@@ -39,7 +35,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
   Future<void> _deletarCliente(int id) async {
     try {
       await _databaseHelper.connect();
-      await _databaseHelper.deleteCliente(id);
+      await _clienteService.deleteCliente(id);
       await _listarClientes(); // Atualiza a lista após deletar
     } catch (e) {
       print('Erro ao deletar cliente: $e');
@@ -89,7 +85,8 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
 
                 return Card(
                   elevation: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -115,7 +112,8 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                           children: [
                             Icon(Icons.phone, size: 16, color: Colors.grey),
                             SizedBox(width: 5),
-                            Text('Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
+                            Text(
+                                'Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
                           ],
                         ),
                         SizedBox(height: 5),
@@ -129,7 +127,8 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                         SizedBox(height: 5),
                         Row(
                           children: [
-                            Icon(Icons.location_on, size: 16, color: Colors.grey),
+                            Icon(Icons.location_on,
+                                size: 16, color: Colors.grey),
                             SizedBox(width: 5),
                             Expanded(
                               child: Text(

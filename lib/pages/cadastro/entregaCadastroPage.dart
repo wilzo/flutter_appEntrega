@@ -3,13 +3,7 @@ import 'package:flutter_projeto/pages/cadastro/clienteSelecaoPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorSelecaoPage.dart';
 import 'package:flutter_projeto/pages/cadastro/ItemSelecaoPage.dart'; // Importe a página de listagem de itens
 import 'package:flutter_projeto/models/databaseHelper.dart';
-import 'package:flutter_projeto/models/endereco_service.dart';
-import 'package:flutter_projeto/models/cliente_service.dart';
 import 'package:flutter_projeto/models/entrega_service.dart';
-import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
-
 
 import 'package:intl/intl.dart';
 
@@ -23,6 +17,7 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
   final TextEditingController _horaController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final EntregaService _entregaService = EntregaService();
 
   int? _entregadorSelecionado;
   int? _clienteSelecionado;
@@ -77,7 +72,7 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
     try {
       DateTime dataEntrega = DateFormat('yyyy-MM-dd').parseStrict(data);
 
-      await _databaseHelper.createEntrega(
+      await _entregaService.createEntrega(
           dataEntrega, hora, entregadorId, clienteId, itemId);
 
       _showSuccessDialog();
@@ -122,13 +117,16 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
   void _abrirListagemItens() async {
     final resultado = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ItemSelecaoPage()), // Use a página de listagem de itens correta
+      MaterialPageRoute(
+          builder: (context) =>
+              ItemSelecaoPage()), // Use a página de listagem de itens correta
     );
 
     if (resultado != null && resultado is int) {
       setState(() {
         _itemSelecionado = resultado;
-        _descricaoController.text = 'Item ID: $_itemSelecionado'; // Atualiza o campo de descrição
+        _descricaoController.text =
+            'Item ID: $_itemSelecionado'; // Atualiza o campo de descrição
       });
     }
   }
@@ -311,7 +309,6 @@ class _EntregaCadastroPageState extends State<EntregaCadastroPage> {
                   ),
                 ),
               ),
-             
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: _cadastrarEntrega,

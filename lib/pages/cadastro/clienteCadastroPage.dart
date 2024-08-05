@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
-import 'package:flutter_projeto/models/databaseHelper.dart';
 
-import 'package:flutter_projeto/models/endereco_service.dart';
 import 'package:flutter_projeto/models/cliente_service.dart';
-import 'package:flutter_projeto/models/entrega_service.dart';
-import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
 
 class ClienteCadastroPage extends StatefulWidget {
   @override
@@ -18,9 +12,10 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final ClienteService _databaseHelper = ClienteService();
 
-  int? _enderecoSelecionado; // Variável para armazenar o ID do endereço selecionado
+  int?
+      _enderecoSelecionado; // Variável para armazenar o ID do endereço selecionado
 
   bool _isLoading = false;
 
@@ -34,7 +29,10 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     String email = _emailController.text.trim();
     int? enderecoId = _enderecoSelecionado; // Obtenha o ID selecionado
 
-    if (nome.isEmpty || telefone.isEmpty || email.isEmpty || enderecoId == null) {
+    if (nome.isEmpty ||
+        telefone.isEmpty ||
+        email.isEmpty ||
+        enderecoId == null) {
       setState(() {
         _isLoading = false;
       });
@@ -157,11 +155,14 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
                 ],
               ),
               const SizedBox(height: 30),
-              _buildTextField(Icons.person, 'Nome', _nomeController, 'Nome Completo'),
+              _buildTextField(
+                  Icons.person, 'Nome', _nomeController, 'Nome Completo'),
               const SizedBox(height: 15),
-              _buildTextField(Icons.phone, 'Telefone', _telefoneController, 'Telefone'),
+              _buildTextField(
+                  Icons.phone, 'Telefone', _telefoneController, 'Telefone'),
               const SizedBox(height: 15),
-              _buildTextField(Icons.email, 'Email', _emailController, 'email@email.com'),
+              _buildTextField(
+                  Icons.email, 'Email', _emailController, 'email@email.com'),
               const SizedBox(height: 20),
               Container(
                 width: MediaQuery.of(context).size.width * 0.8,
@@ -173,14 +174,16 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
                 child: ElevatedButton.icon(
                   onPressed: _abrirListagemEnderecos,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFE0E0E0), // Cor de fundo igual ao campo de input
+                    backgroundColor: Color(
+                        0xFFE0E0E0), // Cor de fundo igual ao campo de input
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     elevation: 0,
                   ),
-                  icon: Icon(Icons.location_on, color: Colors.black), // Ícone adicionado
+                  icon: Icon(Icons.location_on,
+                      color: Colors.black), // Ícone adicionado
                   label: Text(
                     _enderecoSelecionado == null
                         ? 'Selecionar endereço do cliente'
@@ -225,8 +228,8 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     );
   }
 
-  Widget _buildTextField(
-      IconData icon, String label, TextEditingController controller, String hintText) {
+  Widget _buildTextField(IconData icon, String label,
+      TextEditingController controller, String hintText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

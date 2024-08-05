@@ -2,15 +2,15 @@ import 'package:postgres/postgres.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 
 class ClienteService {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final DatabaseHelper _clienteservice = DatabaseHelper();
   Connection? _connection;
 
   // Conectar ao banco de dados
   Future<void> connect() async {
-    _connection = _databaseHelper.connection;
+    _connection = _clienteservice.connection;
     if (_connection == null) {
-      await _databaseHelper.connect();
-      _connection = _databaseHelper.connection;
+      await _clienteservice.connect();
+      _connection = _clienteservice.connection;
     }
   }
 

@@ -1,25 +1,31 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/dataBaseHelper.dart'; // Certifique-se de que o caminho está correto
+import 'package:flutter_projeto/models/user_services.dart';
 import 'package:flutter_projeto/pages/login/login_page.dart'; // Adicione os imports necessários para o seu app
 import 'package:flutter_projeto/pages/main/main_page.dart';
+import 'package:flutter_projeto/models/itens_service.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Inicializa o Flutter
 
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+    final UserService _userService = UserService();
+
 
   try {
     // Conecta ao banco de dados
     await _databaseHelper.connect();
 
     // Cria a tabela de usuários se não existir
-    await _databaseHelper.createUserTable(); 
+    await _userService.createUserTable(); 
 
     // Cria um usuário
-    await _databaseHelper.createUser('testuser', 'testuser@example.com', 'password123');
+    await _userService.createUser('testuser', 'testuser@example.com', 'password123');
 
     // Tenta logar o usuário
-    bool isAuthenticated = await _databaseHelper.loginUser('testuser', 'password123');
+    bool isAuthenticated = await _userService.loginUser('testuser', 'password123');
     print('User authentication status: $isAuthenticated');
 
     // Fecha a conexão

@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 
 import 'package:flutter_projeto/models/endereco_service.dart';
-import 'package:flutter_projeto/models/cliente_service.dart';
-import 'package:flutter_projeto/models/entrega_service.dart';
-import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
+
 class EnderecoCadastroPage extends StatefulWidget {
   @override
   _EnderecoCadastroPageState createState() => _EnderecoCadastroPageState();
@@ -18,7 +14,7 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
   final TextEditingController _bairroController = TextEditingController();
   final TextEditingController _cidadeController = TextEditingController();
   final TextEditingController _cepController = TextEditingController();
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final EnderecoService _enderecoService = EnderecoService();
 
   bool _isLoading = false;
 
@@ -33,7 +29,11 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
     String cidade = _cidadeController.text.trim();
     String cep = _cepController.text.trim();
 
-    if (rua.isEmpty || numero.isEmpty || bairro.isEmpty || cidade.isEmpty || cep.isEmpty) {
+    if (rua.isEmpty ||
+        numero.isEmpty ||
+        bairro.isEmpty ||
+        cidade.isEmpty ||
+        cep.isEmpty) {
       setState(() {
         _isLoading = false;
       });
@@ -44,9 +44,10 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
     }
 
     try {
-      await _databaseHelper.createEnderecoTable();
+      await _enderecoService.createEnderecoTable();
 
-      bool enderecoExiste = await _databaseHelper.verificarEnderecoExiste(rua, numero, bairro, cidade, cep);
+      bool enderecoExiste = await _enderecoService.verificarEnderecoExiste(
+          rua, numero, bairro, cidade, cep);
       if (enderecoExiste) {
         bool criarMesmoAssim = await _mostrarPopupEnderecoExistente();
         if (!criarMesmoAssim) {
@@ -57,7 +58,7 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
         }
       }
 
-      await _databaseHelper.createEndereco(rua, numero, bairro, cidade, cep);
+      await _enderecoService.createEndereco(rua, numero, bairro, cidade, cep);
       Navigator.pop(context, '$rua, $numero, $bairro, $cidade, $cep');
     } catch (e) {
       print('Erro ao cadastrar endereço: $e');
@@ -73,28 +74,30 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
 
   Future<bool> _mostrarPopupEnderecoExistente() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Endereço já cadastrado'),
-          content: Text('Este endereço já está cadastrado. Deseja criar mesmo assim?'),
-          actions: [
-            TextButton(
-              child: Text('Não'),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-            TextButton(
-              child: Text('Sim'),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-          ],
-        );
-      },
-    ) ?? false;
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Endereço já cadastrado'),
+              content: Text(
+                  'Este endereço já está cadastrado. Deseja criar mesmo assim?'),
+              actions: [
+                TextButton(
+                  child: Text('Não'),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                ),
+                TextButton(
+                  child: Text('Sim'),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
   @override
@@ -153,7 +156,8 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hintText) {
+  Widget _buildTextField(
+      String label, TextEditingController controller, String hintText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

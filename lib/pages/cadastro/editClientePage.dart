@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
 import 'package:flutter_projeto/models/databaseHelper.dart';
-
-import 'package:flutter_projeto/models/endereco_service.dart';
 import 'package:flutter_projeto/models/cliente_service.dart';
-import 'package:flutter_projeto/models/entrega_service.dart';
-import 'package:flutter_projeto/models/entregador_service.dart';
-import 'package:flutter_projeto/models/itens_service.dart';
-import 'package:flutter_projeto/models/user_services.dart';
+
 class EditClientePage extends StatefulWidget {
   final int clienteId;
 
@@ -18,6 +13,7 @@ class EditClientePage extends StatefulWidget {
 }
 
 class _EditClientePageState extends State<EditClientePage> {
+  final ClienteService _clienteService = ClienteService();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   late TextEditingController _nomeController;
   late TextEditingController _telefoneController;
@@ -37,7 +33,8 @@ class _EditClientePageState extends State<EditClientePage> {
   Future<void> _carregarDados() async {
     try {
       await _databaseHelper.connect();
-      final cliente = await _databaseHelper.listarClientePorId(widget.clienteId);
+      final cliente =
+          await _clienteService.listarClientePorId(widget.clienteId);
 
       if (cliente != null) {
         setState(() {
@@ -63,14 +60,15 @@ class _EditClientePageState extends State<EditClientePage> {
 
     try {
       await _databaseHelper.connect();
-      await _databaseHelper.updateCliente(
+      await _clienteService.updateCliente(
         widget.clienteId,
         _nomeController.text,
         _telefoneController.text,
         _emailController.text,
         _enderecoSelecionado,
       );
-      Navigator.pop(context, true); // Envia um valor de retorno para indicar que a lista deve ser atualizada
+      Navigator.pop(context,
+          true); // Envia um valor de retorno para indicar que a lista deve ser atualizada
     } catch (e) {
       print('Erro ao atualizar cliente: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -226,7 +224,8 @@ class _EditClientePageState extends State<EditClientePage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hintText) {
+  Widget _buildTextField(
+      String label, TextEditingController controller, String hintText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
