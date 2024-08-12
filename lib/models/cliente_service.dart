@@ -49,22 +49,49 @@ class ClienteService {
       ],
     );
   }
-
-  Future<List<Map<String, dynamic>>> listarClientes() async {
-    if (_connection == null) {
-      await connect();
-    }
-
-    final results = await _connection!.execute('''
-      SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
-      FROM clientes c
-      LEFT JOIN endereco e ON c.endereco_id = e.id
-    ''');
-
-    return results.map((row) => row.toColumnMap()).toList();
+Future<List<Map<String, dynamic>>> listarClientes(String searchQuery) async {
+  if (_connection == null) {
+    await connect();
   }
 
-  Future<void> deleteCliente(int id) async {
+  String sql = '''
+    SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
+    FROM clientes c
+    LEFT JOIN endereco e ON c.endereco_id = e.id
+    WHERE c.nome LIKE \$1 
+       OR c.telefone LIKE \$1 
+       OR c.email LIKE \$1
+       OR e.rua LIKE \$1
+       OR e.bairro LIKE \$1
+    ORDER BY c.nome ASC
+  ''';
+
+  try {
+    final results = await _connection!.execute(
+      sql,
+      parameters: ['%$searchQuery%'],  // Usando a lista de parâmetros
+    );
+
+    return results.map((row) {
+      return {
+        'id': row[0],
+        'nome': row[1],
+        'telefone': row[2],
+        'email': row[3],
+        'rua': row[4],
+        'numero': row[5],
+        'bairro': row[6],
+        'cidade': row[7],
+        'estado': row[8],
+      };
+    }).toList();
+  } catch (e) {
+    print('Erro ao listar clientes: $e');
+    return [];
+  }
+}
+
+Future<void> deleteCliente(int id) async {
     if (_connection == null) {
       await connect();
     }
@@ -73,7 +100,7 @@ class ClienteService {
 
     try {
       await _connection!.execute(
-        r'DELETE FROM clientes WHERE id = $1',
+        'DELETE FROM clientes WHERE id = \$1',
         parameters: [id],
       );
     } catch (e) {
@@ -88,17 +115,17 @@ class ClienteService {
 
     try {
       await _connection!.execute(
-        r'''
+        '''
         UPDATE clientes
-        SET nome = $2, telefone = $3, email = $4, endereco_id = $5
-        WHERE id = $1
+        SET nome = \$1, telefone = \$2, email = \$3, endereco_id = \$4
+        WHERE id = \$5
         ''',
         parameters: [
-          id,       // $1
-          nome,     // $2
-          telefone, // $3
-          email,    // $4
-          enderecoId // $5
+          nome,
+          telefone,
+          email,
+          enderecoId,
+          id,
         ],
       );
     } catch (e) {
@@ -112,18 +139,31 @@ class ClienteService {
     }
 
     try {
-      final results = await _connection!.execute(
-        r'''
+      List<List<dynamic>> results = await _connection!.execute(
+        '''
         SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
         FROM clientes c
         LEFT JOIN endereco e ON c.endereco_id = e.id
-        WHERE c.id = $1
+        WHERE c.id = \$1
         ''',
         parameters: [id],
       );
 
       if (results.isEmpty) return null;
-      return results.first.toColumnMap();
+      
+      var row = results.first;
+      Map<String, dynamic> map = {
+        'id': row[0],
+        'nome': row[1],
+        'telefone': row[2],
+        'email': row[3],
+        'rua': row[4],
+        'numero': row[5],
+        'bairro': row[6],
+        'cidade': row[7],
+        'estado': row[8],
+      };
+      return map;
     } catch (e) {
       print('Erro ao listar cliente por ID: $e');
       return null;

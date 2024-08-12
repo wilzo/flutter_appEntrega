@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/editEntregadorPage.dart';
 import 'package:flutter_projeto/models/entregador_service.dart';
-
+import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
 
 class EntregadorListagemPage extends StatefulWidget {
   @override
@@ -11,7 +11,8 @@ class EntregadorListagemPage extends StatefulWidget {
 
 class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-    final EntregadorService entregadorService = EntregadorService();
+  final EntregadorService _entregadorService = EntregadorService();
+  final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _entregadores = [];
 
@@ -21,16 +22,10 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
     _listarEntregadores();
   }
 
-  Future<void> _listarEntregadores() async {
+  Future<void> _listarEntregadores([String searchQuery = '']) async {
     try {
       await _databaseHelper.connect();
-      _entregadores = await entregadorService.listarEntregadores();
-      _entregadores.forEach((entregador) {
-        if (entregador['id_Entregador'] == null) {
-          print(
-              'Erro: ID do entregador é nulo para o entregador ${entregador['nome']}');
-        }
-      });
+      _entregadores = await _entregadorService.listarEntregadores(searchQuery);
       setState(() {});
     } catch (e) {
       print('Erro ao listar entregadores: $e');
@@ -40,20 +35,61 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
   }
 
   Future<void> _deletarEntregador(int id) async {
-    try {
-      await _databaseHelper.connect();
-      await entregadorService.deleteEntregador(id);
-      await _listarEntregadores(); // Atualiza a lista após deletar
-    } catch (e) {
-      print('Erro ao deletar entregador: $e');
-    } finally {
-      await _databaseHelper.closeConnection();
+    bool confirmar = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirmação'),
+        content: Text('Deseja realmente deletar este entregador?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Deletar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      try {
+        await _databaseHelper.connect();
+        await _entregadorService.deleteEntregador(id);
+        await _listarEntregadores(); // Atualiza a lista após deletar
+      } catch (e) {
+        print('Erro ao deletar entregador: $e');
+      } finally {
+        await _databaseHelper.closeConnection();
+      }
     }
   }
 
   Future<void> _editarEntregador(int id) async {
-    // Lógica para editar entregador
-    // Navegar para uma página de edição ou abrir um diálogo para editar os dados do entregador
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditEntregadorPage(entregadorId: id),
+      ),
+    );
+
+    if (result == true) {
+      _listarEntregadores(); // Atualiza a lista após editar
+    }
+  }
+
+  Future<void> _adicionarEntregador() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EntregadorCadastroPage(),
+      ),
+    );
+
+    if (result == true) {
+      _listarEntregadores(); // Atualiza a lista após adicionar
+    }
   }
 
   @override
@@ -69,104 +105,131 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: _entregadores.isEmpty
-          ? Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFFF0000), // Cor igual ao padrão
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _entregadores.length,
-              itemBuilder: (context, index) {
-                final entregador = _entregadores[index];
-                final id = entregador['id_Entregador'];
-                print('Entregador ID: $id'); // Verificação para depuração
-
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16.0),
-                    leading: Icon(
-                      Icons.local_shipping,
-                      size: 50,
-                      color: Color(0xFFFF0000), // Cor igual ao padrão
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Pesquisar entregador...',
+                      border: OutlineInputBorder(),
                     ),
-                    title: Text(
-                      entregador['nome'] ?? 'Nome',
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    _listarEntregadores(_searchController.text);
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _entregadores.isEmpty
+                ? Center(
+                    child: Text(
+                      _searchController.text.isEmpty
+                          ? 'Nenhum entregador cadastrado.'
+                          : 'Não foram encontrados resultados.',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                         fontSize: 18,
-                        color: Color(0xFFFF0000), // Cor igual ao padrão
                       ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.phone, size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text(
-                                'Telefone: ${entregador['telefone'] ?? 'Telefone'}'),
-                          ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _entregadores.length,
+                    itemBuilder: (context, index) {
+                      final entregador = _entregadores[index];
+                      final id = entregador['id_Entregador'];
+
+                      return Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.card_membership,
-                                size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text('CNH: ${entregador['cnh'] ?? 'CNH'}'),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.directions_car,
-                                size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text(
-                                'Veículo: ${entregador['veiculo'] ?? 'Veículo'}'),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: id != null
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16.0),
+                          leading: Icon(
+                            Icons.local_shipping,
+                            size: 50,
+                            color: Color(0xFFFF0000), // Cor igual ao padrão
+                          ),
+                          title: Text(
+                            entregador['nome'] ?? 'Nome',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFFFF0000), // Cor igual ao padrão
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          EditEntregadorPage(entregadorId: id),
-                                    ),
-                                  );
-                                },
+                              Row(
+                                children: [
+                                  Icon(Icons.phone, size: 16, color: Colors.grey),
+                                  SizedBox(width: 5),
+                                  Text(
+                                      'Telefone: ${entregador['telefone'] ?? 'Telefone'}'),
+                                ],
                               ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  // Chama o método de deletar entregador
-                                  _deletarEntregador(id);
-                                },
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.card_membership,
+                                      size: 16, color: Colors.grey),
+                                  SizedBox(width: 5),
+                                  Text('CNH: ${entregador['cnh'] ?? 'CNH'}'),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.directions_car,
+                                      size: 16, color: Colors.grey),
+                                  SizedBox(width: 5),
+                                  Text(
+                                      'Veículo: ${entregador['veiculo'] ?? 'Veículo'}'),
+                                ],
                               ),
                             ],
-                          )
-                        : null,
+                          ),
+                          trailing: id != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _editarEntregador(id),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _deletarEntregador(id),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _adicionarEntregador,
+        child: Icon(Icons.add),
+        backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
+      ),
     );
   }
 }

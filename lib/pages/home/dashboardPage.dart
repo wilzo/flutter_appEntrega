@@ -23,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Map<String, dynamic>> _entregasPendentes = [];
   List<Map<String, dynamic>> _entregasFuturas = [];
   List<Map<String, dynamic>> _entregasConcluidas = [];
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -43,9 +44,6 @@ class _DashboardPageState extends State<DashboardPage> {
       _entregasFuturas = entregas.where((entrega) => entrega['status'] == 'futura').toList();
       _entregasConcluidas = entregas.where((entrega) => entrega['status'] == 'concluída').toList();
     });
-    print('Pendentes: $_entregasPendentes');
-    print('Futuras: $_entregasFuturas');
-    print('Concluídas: $_entregasConcluidas');
   }
 
   Future<void> _concluirEntrega(int idEntrega) async {
@@ -69,7 +67,6 @@ class _DashboardPageState extends State<DashboardPage> {
         DateTime dateTime = DateTime.parse(data);
         return DateFormat('dd/MM/yyyy').format(dateTime);
       } catch (e) {
-        print('Erro ao formatar data: $e');
         return data;
       }
     }
@@ -84,12 +81,39 @@ class _DashboardPageState extends State<DashboardPage> {
         DateTime dateTime = DateFormat('HH:mm:ss').parse(hora);
         return DateFormat('HH:mm').format(dateTime);
       } catch (e) {
-        print('Erro ao formatar hora: $e');
         return hora;
       }
     }
     return hora.toString();
   }
+
+  void _confirmarLogout(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Sair'),
+        content: Text('Você realmente deseja sair?'),
+        actions: [
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Sair'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Fechar o pop-up
+              Navigator.of(context).pushReplacementNamed('/login'); // Navegar para a tela de login
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void _toggleClienteOptions() {
     setState(() {
@@ -189,145 +213,192 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildEntregaColumn(String title, List<Map<String, dynamic>> entregas, Color color) {
-    return Expanded(
-      child: Container(
-        color: color,
-        padding: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              
-              title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              
-            ),
-            SizedBox(height: 10),
-            entregas.isEmpty
-                ? Text('Nenhuma entrega.')
-                : Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: entregas.map((entrega) => _buildEntregaCard(entrega)).toList(),
-                      ),
-                    ),
-                  ),
-          ],
+  return Container(
+    width: 400, // Ajuste a largura conforme necessário
+    color: color,
+    padding: EdgeInsets.all(10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-    );
-  }
+        SizedBox(height: 10),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: entregas
+                  .where((entrega) => entrega['cliente_nome']
+                      .toLowerCase()
+                      .contains(_searchQuery.toLowerCase()))
+                  .map((entrega) => _buildEntregaCard(entrega))
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.red,
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('TELA PRINCIPAL'),
+      backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
+      centerTitle: true,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
+      actions: [
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'meu_perfil') {
+              // Ação para "Meu Perfil"
+              // Aqui você pode navegar para a página de perfil do usuário
+            } else if (value == 'sair') {
+              _confirmarLogout(context);
+            }
+          },
+          icon: CircleAvatar(
+            backgroundColor: Colors.grey,
+            child: Icon(Icons.person, color: Colors.white), // Ícone temporário para a foto de perfil
+          ),
+          itemBuilder: (BuildContext context) {
+            return [
+              PopupMenuItem<String>(
+                value: 'meu_perfil',
+                child: Text('Meu Perfil'),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.asset('assets/images/entrega.jpg', height: 50, width: 50),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'ENTREGAJÁ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
+              PopupMenuItem<String>(
+                value: 'sair',
+                child: Text('Sair'),
+              ),
+            ];
+          },
+        ),
+      ],
+    ),
+    drawer: Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.red,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset('assets/images/entrega.jpg', height: 50, width: 50),
+                const SizedBox(height: 10),
+                const Text(
+                  'ENTREGAJÁ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
                   ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.dashboard),
+            title: const Text('Tela principal'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: Icon(Icons.local_shipping),
+            title: const Text('Entregas'),
+            onTap: _toggleEntregaOptions,
+          ),
+          if (_showEntregaOptions) ...[
+            ListTile(
+              title: const Text('Adicionar Entrega'),
+              onTap: () async {
+                await _navigateAndRefresh(EntregaCadastroPage());
+              },
+              contentPadding: EdgeInsets.only(left: 50.0),
+            ),
+          ],
+          ListTile(
+            leading: Icon(Icons.person),
+            title: const Text('Entregadores'),
+            onTap: _toggleEntregadorOptions,
+          ),
+          if (_showEntregadorOptions) ...[
+            ListTile(
+              title: const Text('Listar Entregadores'),
+              onTap: () {
+                _navigateAndRefresh(EntregadorListagemPage());
+              },
+              contentPadding: EdgeInsets.only(left: 50.0),
+            ),
+          ],
+          ListTile(
+            leading: Icon(Icons.person_outline),
+            title: const Text('Clientes'),
+            onTap: _toggleClienteOptions,
+          ),
+          if (_showClienteOptions) ...[
+            ListTile(
+              title: const Text('Listar Clientes'),
+              onTap: () {
+                _navigateAndRefresh(ClienteListagemPage());
+              },
+              contentPadding: EdgeInsets.only(left: 50.0),
+            ),
+          ],
+        ],
+      ),
+    ),
+    body: Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Container(
+            width: 1200, // Define a largura do Container para corresponder à largura das colunas
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Pesquisar por nome do cliente',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+          SizedBox(height: 20), // Espaço entre o campo de pesquisa e as colunas
+          Expanded(
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildEntregaColumn('Pendentes', _entregasPendentes, Color.fromARGB(255, 255, 247, 2)),
+                  
+                  _buildEntregaColumn('Futuras', _entregasFuturas, Color.fromARGB(235, 231, 134, 8)),
+                  
+                  _buildEntregaColumn('Concluídas', _entregasConcluidas, const Color.fromARGB(255, 0, 239, 8)),
                 ],
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.dashboard),
-              title: const Text('Tela principal'),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: Icon(Icons.local_shipping),
-              title: const Text('Entregas'),
-              onTap: _toggleEntregaOptions,
-            ),
-            if (_showEntregaOptions) ...[
-              ListTile(
-                title: const Text('Adicionar Entrega'),
-                onTap: () async {
-                  await _navigateAndRefresh(EntregaCadastroPage());
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
-              leading: Icon(Icons.person),
-              title: const Text('Entregadores'),
-              onTap: _toggleEntregadorOptions,
-            ),
-            if (_showEntregadorOptions) ...[
-              ListTile(
-                title: const Text('Adicionar Entregador'),
-                onTap: () {
-                  _navigateAndRefresh(EntregadorCadastroPage());
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Listar Entregadores'),
-                onTap: () {
-                  _navigateAndRefresh(EntregadorListagemPage());
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
-              leading: Icon(Icons.person_outline),
-              title: const Text('Clientes'),
-              onTap: _toggleClienteOptions,
-            ),
-            if (_showClienteOptions) ...[
-              ListTile(
-                title: const Text('Adicionar Cliente'),
-                onTap: () {
-                  _navigateAndRefresh(ClienteCadastroPage());
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Listar Clientes'),
-                onTap: () {
-                  _navigateAndRefresh(ClienteListagemPage());
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-          ],
-        ),
-      ),
-      appBar: AppBar(
-        title: const Text('Tela principal',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),),
-        backgroundColor: const Color.fromARGB(255, 255, 17, 0),
-        centerTitle: true,
-      ),
-      body: Row(
-        children: [
-          _buildEntregaColumn('Pendentes', _entregasPendentes, const Color.fromARGB(255, 112, 11, 21)!),
-          _buildEntregaColumn('Futuras', _entregasFuturas, Color.fromARGB(229, 235, 69, 9)!),
-          _buildEntregaColumn('Concluídas', _entregasConcluidas, const Color.fromARGB(255, 9, 224, 16)!),
+          ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

@@ -46,7 +46,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(), // Ajuste para a página inicial do seu app
+      home: LoginPage(),
+      routes: {
+        '/login': (context) => LoginPage(), 
+      }
     );
   }
 }

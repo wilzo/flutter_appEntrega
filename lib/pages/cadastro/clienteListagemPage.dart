@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/editClientePage.dart';
 import 'package:flutter_projeto/models/cliente_service.dart';
+import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 
 class ClienteListagemPage extends StatefulWidget {
   @override
@@ -11,6 +12,7 @@ class ClienteListagemPage extends StatefulWidget {
 class _ClienteListagemPageState extends State<ClienteListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   final ClienteService _clienteService = ClienteService();
+  final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _clientes = [];
 
@@ -20,10 +22,10 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     _listarClientes();
   }
 
-  Future<void> _listarClientes() async {
+  Future<void> _listarClientes([String searchQuery = '']) async {
     try {
       await _databaseHelper.connect();
-      _clientes = await _clienteService.listarClientes();
+      _clientes = await _clienteService.listarClientes(searchQuery);
       setState(() {});
     } catch (e) {
       print('Erro ao listar clientes: $e');
@@ -33,14 +35,34 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
   }
 
   Future<void> _deletarCliente(int id) async {
-    try {
-      await _databaseHelper.connect();
-      await _clienteService.deleteCliente(id);
-      await _listarClientes(); // Atualiza a lista após deletar
-    } catch (e) {
-      print('Erro ao deletar cliente: $e');
-    } finally {
-      await _databaseHelper.closeConnection();
+    bool confirmar = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirmação'),
+        content: Text('Deseja realmente deletar este cliente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Deletar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      try {
+        await _databaseHelper.connect();
+        await _clienteService.deleteCliente(id);
+        await _listarClientes(); // Atualiza a lista após deletar
+      } catch (e) {
+        print('Erro ao deletar cliente: $e');
+      } finally {
+        await _databaseHelper.closeConnection();
+      }
     }
   }
 
@@ -57,6 +79,19 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     }
   }
 
+  Future<void> _adicionarCliente() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ClienteCadastroPage(),
+      ),
+    );
+
+    if (result == true) {
+      _listarClientes(); // Atualiza a lista após adicionar
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,95 +105,134 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: _clientes.isEmpty
-          ? Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFFF0000), // Cor igual ao padrão
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _clientes.length,
-              itemBuilder: (context, index) {
-                final cliente = _clientes[index];
-                final id = cliente['id'];
-
-                return Card(
-                  elevation: 4,
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16.0),
-                    leading: Icon(
-                      Icons.person,
-                      size: 50,
-                      color: Color(0xFFFF0000), // Cor igual ao padrão
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Pesquisar cliente...',
+                      border: OutlineInputBorder(),
                     ),
-                    title: Text(
-                      cliente['nome'] ?? 'Nome',
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    _listarClientes(_searchController.text);
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _clientes.isEmpty
+                ? Center(
+                    child: Text(
+                      _searchController.text.isEmpty
+                          ? 'Nenhum cliente cadastrado.'
+                          : 'Não foram encontrados resultados.',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
                         fontSize: 18,
-                        color: Color(0xFFFF0000), // Cor igual ao padrão
                       ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.phone, size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text(
-                                'Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
-                          ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _clientes.length,
+                    itemBuilder: (context, index) {
+                      final cliente = _clientes[index];
+                      final id = cliente['id'];
+
+                      return Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.email, size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text('Email: ${cliente['email'] ?? 'Email'}'),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.location_on,
-                                size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                'Endereço: ${cliente['rua'] ?? 'Rua'}, ${cliente['numero'] ?? 'Número'}, ${cliente['bairro'] ?? 'Bairro'}, ${cliente['cidade'] ?? 'Cidade'}, ${cliente['estado'] ?? 'Estado'}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16.0),
+                          leading: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Color(0xFFFF0000), // Cor igual ao padrão
+                          ),
+                          title: Text(
+                            cliente['nome'] ?? 'Nome',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFFFF0000), // Cor igual ao padrão
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: id != null
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _editarCliente(id),
+                              Row(
+                                children: [
+                                  Icon(Icons.phone, size: 16, color: Colors.grey),
+                                  SizedBox(width: 5),
+                                  Text(
+                                      'Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
+                                ],
                               ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _deletarCliente(id),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.email, size: 16, color: Colors.grey),
+                                  SizedBox(width: 5),
+                                  Text('Email: ${cliente['email'] ?? 'Email'}'),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on,
+                                      size: 16, color: Colors.grey),
+                                  SizedBox(width: 5),
+                                  Expanded(
+                                    child: Text(
+                                      'Endereço: ${cliente['rua'] ?? 'Rua'}, ${cliente['numero'] ?? 'Número'}, ${cliente['bairro'] ?? 'Bairro'}, ${cliente['cidade'] ?? 'Cidade'}, ${cliente['estado'] ?? 'Estado'}',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          )
-                        : null,
+                          ),
+                          trailing: id != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _editarCliente(id),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _deletarCliente(id),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _adicionarCliente,
+        child: Icon(Icons.add),
+        backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
+      ),
     );
   }
 }

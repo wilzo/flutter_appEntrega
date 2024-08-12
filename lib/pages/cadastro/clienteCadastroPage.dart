@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
-
+import 'enderecoListagemPage.dart';
 import 'package:flutter_projeto/models/cliente_service.dart';
 
 class ClienteCadastroPage extends StatefulWidget {
@@ -14,8 +13,9 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
   final TextEditingController _emailController = TextEditingController();
   final ClienteService _databaseHelper = ClienteService();
 
-  int?
-      _enderecoSelecionado; // Variável para armazenar o ID do endereço selecionado
+  int? _enderecoSelecionadoId;
+  int? _enderecoSelecionadoIdArmazenado; // Nova variável para armazenar o ID
+  String? _enderecoSelecionadoDescricao; 
 
   bool _isLoading = false;
 
@@ -24,15 +24,14 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
       _isLoading = true;
     });
 
+    // Remover espaços em branco dos campos
     String nome = _nomeController.text.trim();
     String telefone = _telefoneController.text.trim();
     String email = _emailController.text.trim();
-    int? enderecoId = _enderecoSelecionado; // Obtenha o ID selecionado
+    int? enderecoId = _enderecoSelecionadoId; // Usando a nova variável
 
-    if (nome.isEmpty ||
-        telefone.isEmpty ||
-        email.isEmpty ||
-        enderecoId == null) {
+    // Verificar se algum dos campos está vazio ou nulo
+    if (nome.isEmpty || telefone.isEmpty || email.isEmpty || enderecoId == null) {
       setState(() {
         _isLoading = false;
       });
@@ -60,17 +59,22 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
   }
 
   void _abrirListagemEnderecos() async {
-    final resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
-    );
+  final resultado = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
+  );
 
-    if (resultado != null && resultado is int) {
-      setState(() {
-        _enderecoSelecionado = resultado;
-      });
-    }
+  if (resultado != null && resultado is Map<String, dynamic>) {
+    print('Resultado: $resultado'); // Adicione isto
+    setState(() {
+      _enderecoSelecionadoDescricao =
+          '${resultado['rua']}, ${resultado['numero']}';
+      _enderecoSelecionadoId = resultado['id'];
+    });
+    print('ID Selecionado: $_enderecoSelecionadoId'); // E isto
   }
+}
+
 
   void _showSuccessDialog() {
     showDialog(
@@ -89,11 +93,14 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Fechar o pop-up
-                Navigator.pop(context); // Navegar de volta para a tela anterior
+                Navigator.pop(context); // Navegar para a tela anterior
               },
               child: Text(
                 'OK',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -107,159 +114,80 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cadastrar Cliente'),
-        backgroundColor: Color(0xFFFF0000), // Cor igual ao botão "Cadastrar"
+        backgroundColor: Color(0xFFFF0000),
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: Colors.white,
-          fontSize: 22, // Aumenta o tamanho da fonte
+          fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/entrega.jpg',
-                    height: 100,
-                    fit: BoxFit.fitHeight,
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    children: [
-                      const Text(
-                        'ENTREGA JA',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFFFF0000),
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'CADASTRE SEUS CLIENTES',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFFFF0000),
-                          fontSize: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              _buildTextField(
-                  Icons.person, 'Nome', _nomeController, 'Nome Completo'),
-              const SizedBox(height: 15),
-              _buildTextField(
-                  Icons.phone, 'Telefone', _telefoneController, 'Telefone'),
-              const SizedBox(height: 15),
-              _buildTextField(
-                  Icons.email, 'Email', _emailController, 'email@email.com'),
-              const SizedBox(height: 20),
-              Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                height: 50, // Aumenta a altura do botão
-                decoration: BoxDecoration(
-                  color: Color(0xFFE0E0E0),
-                  borderRadius: BorderRadius.circular(10),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Cadastrar Cliente',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFF0000),
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: _abrirListagemEnderecos,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(
-                        0xFFE0E0E0), // Cor de fundo igual ao campo de input
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: Icon(Icons.location_on,
-                      color: Colors.black), // Ícone adicionado
-                  label: Text(
-                    _enderecoSelecionado == null
-                        ? 'Selecionar endereço do cliente'
-                        : 'Endereço ID: $_enderecoSelecionado',
-                    style: TextStyle(
-                      color: Colors.black, // Cor do texto
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _cadastrarCliente,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFFF0000), // Cor de fundo do botão
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
-                      : const Text(
-                          'Cadastrar',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
+            ),
+            TextField(
+              controller: _nomeController,
+              decoration: InputDecoration(
+                labelText: 'Nome',
+                border: OutlineInputBorder(),
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: 16.0),
+            TextField(
+              controller: _telefoneController,
+              decoration: InputDecoration(
+                labelText: 'Telefone',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16.0),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: _abrirListagemEnderecos,
+              child:
+                  Text(_enderecoSelecionadoDescricao ?? 'Selecionar Endereço'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                backgroundColor: Colors.red,
+              ),
+            ),
+            SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _cadastrarCliente,
+              child: _isLoading
+                  ? CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                  : Text('Cadastrar'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                backgroundColor: Colors.red,
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField(IconData icon, String label,
-      TextEditingController controller, String hintText) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Color(0xFFFF0000),
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Container(
-          width: MediaQuery.of(context).size.width * 0.8,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Color(0xFFE0E0E0),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: Colors.grey[600]),
-              hintText: hintText,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              border: InputBorder.none,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

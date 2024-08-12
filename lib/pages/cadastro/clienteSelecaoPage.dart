@@ -22,7 +22,7 @@ class _ClienteSelecaoPageState extends State<ClienteSelecaoPage> {
   Future<void> _listarClientes() async {
     try {
       await _clienteService.connect();
-      _clientes = await _clienteService.listarClientes();
+      _clientes = await _clienteService.listarClientes('');
       setState(() {});
     } catch (e) {
       print('Erro ao listar clientes: $e');

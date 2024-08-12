@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/pages/home/dashboardPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
-import 'package:flutter_projeto/models/databaseHelper.dart'; // Adicione esta importação
-import 'package:flutter_projeto/models/entregador_service.dart';
+import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
+import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
+import 'package:flutter_projeto/models/databaseHelper.dart';
 
+import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
+import 'package:flutter_projeto/models/entregador_service.dart';
 
 class EntregadorCadastroPage extends StatefulWidget {
   @override
@@ -14,35 +17,11 @@ class EntregadorCadastroPage extends StatefulWidget {
 class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _cnhController = TextEditingController();
   final TextEditingController _veiculoController = TextEditingController();
   bool _isLoading = false;
 
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-  
-  final EntregadorService _entregadorService = EntregadorService(); // Instanciar o DatabaseHelper
-
-  bool _showClienteOptions = false;
-  bool _showEntregadorOptions = false;
-  bool _showEntregaOptions = false;
-
-  void _toggleClienteOptions() {
-    setState(() {
-      _showClienteOptions = !_showClienteOptions;
-    });
-  }
-
-  void _toggleEntregadorOptions() {
-    setState(() {
-      _showEntregadorOptions = !_showEntregadorOptions;
-    });
-  }
-
-  void _toggleEntregaOptions() {
-    setState(() {
-      _showEntregaOptions = !_showEntregaOptions;
-    });
-  }
+  final EntregadorService _entregadorService = EntregadorService();
 
   void _cadastrarEntregador() async {
     setState(() {
@@ -51,10 +30,10 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
 
     String nome = _nomeController.text.trim();
     String telefone = _telefoneController.text.trim();
-    String email = _emailController.text.trim();
+    String cnh = _cnhController.text.trim();
     String veiculo = _veiculoController.text.trim();
 
-    if (nome.isEmpty || telefone.isEmpty || email.isEmpty || veiculo.isEmpty) {
+    if (nome.isEmpty || telefone.isEmpty || cnh.isEmpty || veiculo.isEmpty) {
       setState(() {
         _isLoading = false;
       });
@@ -66,8 +45,11 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
 
     try {
       await _entregadorService.createEntregadorTable();
-      await _entregadorService.cadastrarEntregador(nome, telefone, email, veiculo); // Chame o método para cadastrar entregador
-      Navigator.pop(context); // Navegar de volta ou para a página desejada
+      await _entregadorService.cadastrarEntregador(nome, telefone, cnh, veiculo);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Entregador cadastrado com sucesso!')),
+      );
+      Navigator.pop(context);
     } catch (e) {
       print('Erro ao cadastrar entregador: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,94 +99,94 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
                 );
               },
             ),
-            ListTile(
+            ExpansionTile(
               leading: Icon(Icons.local_shipping),
               title: const Text('Entregas'),
-              onTap: _toggleEntregaOptions,
+              children: <Widget>[
+                ListTile(
+                  title: const Text('Adicionar Entrega'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EntregaCadastroPage()),
+                    );
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+                ListTile(
+                  title: const Text('Excluir Entregas'),
+                  onTap: () {
+                    // Navegar para a tela de excluir entrega
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+              ],
             ),
-            if (_showEntregaOptions) ...[
-              ListTile(
-                title: const Text('Adicionar Entrega'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EntregaCadastroPage()),
-                  );
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Excluir Entregas'),
-                onTap: () {},
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
+            ExpansionTile(
               leading: Icon(Icons.person),
               title: const Text('Entregadores'),
-              onTap: _toggleEntregadorOptions,
+              children: <Widget>[
+                ListTile(
+                  title: const Text('Cadastrar Entregador'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EntregadorCadastroPage()),
+                    );
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+                ListTile(
+                  title: const Text('Excluir Entregador'),
+                  onTap: () {
+                    // Navegar para a tela de excluir entregador
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+                ListTile(
+                  title: const Text('Listar Entregadores'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EntregadorListagemPage()),
+                    );
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+              ],
             ),
-            if (_showEntregadorOptions) ...[
-              ListTile(
-                title: const Text('Cadastrar Entregador'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EntregadorCadastroPage()),
-                  );
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Excluir Entregador'),
-                onTap: () {
-                  // Navegar para a tela de excluir entregador
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Listar Entregadores'),
-                onTap: () {
-                  // Navegar para a tela de listar entregadores
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
+            ExpansionTile(
               leading: Icon(Icons.people),
               title: const Text('Clientes'),
-              onTap: _toggleClienteOptions,
-            ),
-            if (_showClienteOptions) ...[
-              ListTile(
-                title: const Text('Cadastrar Cliente'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ClienteCadastroPage()),
-                  );
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Excluir Cliente'),
-                onTap: () {
-                  // Navegar para a tela de excluir cliente
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-              ListTile(
-                title: const Text('Listar Clientes'),
-                onTap: () {
-                  // Navegar para a tela de listar clientes
-                },
-                contentPadding: EdgeInsets.only(left: 50.0),
-              ),
-            ],
-            ListTile(
-              leading: Icon(Icons.map),
-              title: const Text('Mapa de Entregas'),
-              onTap: () {},
+              children: <Widget>[
+                ListTile(
+                  title: const Text('Cadastrar Cliente'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ClienteCadastroPage()),
+                    );
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+                ListTile(
+                  title: const Text('Excluir Cliente'),
+                  onTap: () {
+                    // Navegar para a tela de excluir cliente
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+                ListTile(
+                  title: const Text('Listar Clientes'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ClienteListagemPage()),
+                    );
+                  },
+                  contentPadding: EdgeInsets.only(left: 50.0),
+                ),
+              ],
             ),
           ],
         ),
@@ -263,7 +245,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
               const SizedBox(height: 20),
               _buildTextField(Icons.phone, 'Telefone', _telefoneController, 'Telefone'),
               const SizedBox(height: 20),
-              _buildTextField(Icons.email, 'Email', _emailController, 'email@email.com'),
+              _buildTextField(Icons.credit_card, 'CNH', _cnhController, 'Número da CNH'),
               const SizedBox(height: 20),
               _buildTextField(Icons.directions_car, 'Veículo', _veiculoController, 'Veículo'),
               const SizedBox(height: 40),
@@ -308,23 +290,22 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
           style: TextStyle(
             color: Color(0xFFFF0000),
             fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 5),
-        Container(
-          width: MediaQuery.of(context).size.width * 0.8,
-          height: 50,
-          decoration: BoxDecoration(
-            color: Color(0xFFE0E0E0),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: Color(0xFFFF0000)),
-              hintText: hintText,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              border: InputBorder.none,
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: hintText,
+            prefixIcon: Icon(icon, color: Color(0xFFFF0000)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Color(0xFFFF0000)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Color(0xFFFF0000)),
             ),
           ),
         ),

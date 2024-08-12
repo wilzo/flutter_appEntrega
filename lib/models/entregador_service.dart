@@ -43,47 +43,84 @@ class EntregadorService {
         veiculo,
       ],
     );
+    
   }
 
-  Future<List<Map<String, dynamic>>> listarEntregadores() async {
+  Future<List<Map<String, dynamic>>> listarEntregadores([String searchQuery = '']) async {
     if (_connection == null) {
       await connect();
     }
 
-    final results = await _connection!.execute('''
+    String sql = '''
       SELECT id_Entregador, nome, telefone, cnh, veiculo
       FROM entregador
-    ''');
+      WHERE nome LIKE \$1 OR telefone LIKE \$1 OR cnh LIKE \$1 OR veiculo LIKE \$1
+      ORDER BY nome
+    ''';
 
-    final entregadores = results.map((row) {
-      final entregador = {
+    List<List<dynamic>> results = await _connection!.execute(
+      sql,
+      parameters: [
+        '%$searchQuery%',
+      ],
+    );
+
+    List<Map<String, dynamic>> entregadores = [];
+
+    for (var row in results) {
+      Map<String, dynamic> map = {
         'id_Entregador': row[0],
         'nome': row[1],
         'telefone': row[2],
         'cnh': row[3],
         'veiculo': row[4],
       };
-      print('Row data: $entregador');
-      return entregador;
-    }).toList();
+      entregadores.add(map);
+    }
 
     return entregadores;
   }
 
   Future<void> deleteEntregador(int id) async {
     if (_connection == null) {
-      throw Exception("Connection is not established");
+      await connect();
     }
 
     print('Tentando deletar entregador com ID: $id');
 
     try {
       await _connection!.execute(
-        r'DELETE FROM entregador WHERE id_Entregador = $1',
-        parameters: [id], // O valor do parâmetro é passado aqui
+        'DELETE FROM entregador WHERE id_Entregador = \$1',
+        parameters: [id],
       );
     } catch (e) {
       print('Erro ao deletar entregador: $e');
+    }
+  }
+
+  Future<void> updateEntregador(
+      int id, String nome, String telefone, String cnh, String veiculo) async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    try {
+      await _connection!.execute(
+        '''
+        UPDATE entregador
+        SET nome = \$1, telefone = \$2, cnh = \$3, veiculo = \$4
+        WHERE id_Entregador = \$5
+        ''',
+        parameters: [
+          nome,
+          telefone,
+          cnh,
+          veiculo,
+          id,
+        ],
+      );
+    } catch (e) {
+      print('Erro ao atualizar entregador: $e');
     }
   }
 
@@ -93,42 +130,29 @@ class EntregadorService {
     }
 
     try {
-      final results = await _connection!.execute(
-        'SELECT id_Entregador, nome, telefone, cnh, veiculo FROM entregador WHERE id_Entregador = $id',
+      List<List<dynamic>> results = await _connection!.execute(
+        '''
+        SELECT id_Entregador, nome, telefone, cnh, veiculo
+        FROM entregador
+        WHERE id_Entregador = \$1
+        ''',
         parameters: [id],
       );
 
       if (results.isEmpty) return null;
-      return results.first.toColumnMap();
+      
+      var row = results.first;
+      Map<String, dynamic> map = {
+        'id_Entregador': row[0],
+        'nome': row[1],
+        'telefone': row[2],
+        'cnh': row[3],
+        'veiculo': row[4],
+      };
+      return map;
     } catch (e) {
       print('Erro ao listar entregador por ID: $e');
       return null;
-    }
-  }
-
-  Future<void> updateEntregador(
-      int id, String nome, String telefone, String cnh, String veiculo) async {
-    if (_connection == null) {
-      throw Exception("Connection is not established");
-    }
-
-    try {
-      await _connection!.execute(
-        r'''
-      UPDATE entregador
-      SET nome = $2, telefone = $3, cnh = $4, veiculo = $5
-      WHERE id_Entregador = $1
-      ''',
-        parameters: [
-          id, // $1
-          nome, // $2
-          telefone, // $3
-          cnh, // $4
-          veiculo, // $5
-        ],
-      );
-    } catch (e) {
-      print('Erro ao atualizar entregador: $e');
     }
   }
 }

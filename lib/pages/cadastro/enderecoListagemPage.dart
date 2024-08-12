@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/enderecoCadastroPage.dart';
-
+import 'package:flutter_projeto/pages/cadastro/editEnderecoPage.dart';
 import 'package:flutter_projeto/models/endereco_service.dart';
+
 class EnderecoListagemPage extends StatefulWidget {
   @override
   _EnderecoListagemPageState createState() => _EnderecoListagemPageState();
@@ -10,7 +11,8 @@ class EnderecoListagemPage extends StatefulWidget {
 
 class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-      final EnderecoService _enderecoService = EnderecoService();
+  final EnderecoService _enderecoService = EnderecoService();
+  final TextEditingController _searchController = TextEditingController();
 
   List<Map<String, dynamic>> _enderecos = [];
 
@@ -20,10 +22,10 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     _listarEnderecos();
   }
 
-  Future<void> _listarEnderecos() async {
+  Future<void> _listarEnderecos([String searchQuery = '']) async {
     try {
       await _databaseHelper.connect();
-      _enderecos = await _enderecoService.listarEndereco();
+      _enderecos = await _enderecoService.listarEnderecos(searchQuery);
       setState(() {});
     } catch (e) {
       print('Erro ao listar endereços: $e');
@@ -32,15 +34,61 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     }
   }
 
-  void _abrirCadastroEndereco() async {
-    final resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => EnderecoCadastroPage()),
+  Future<void> _deletarEndereco(int id) async {
+    bool confirmar = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirmação'),
+        content: Text('Deseja realmente deletar este endereço?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Deletar'),
+          ),
+        ],
+      ),
     );
 
-    if (resultado != null && resultado is String) {
-      // Atualize a lista de endereços se necessário
-      _listarEnderecos();
+    if (confirmar == true) {
+      try {
+        await _databaseHelper.connect();
+        await _enderecoService.deleteEndereco(id);
+        await _listarEnderecos(); // Atualiza a lista após deletar
+      } catch (e) {
+        print('Erro ao deletar endereço: $e');
+      } finally {
+        await _databaseHelper.closeConnection();
+      }
+    }
+  }
+
+  Future<void> _editarEndereco(int id) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditEnderecoPage(enderecoId: id),
+      ),
+    );
+
+    if (result == true) {
+      _listarEnderecos(); // Atualiza a lista após editar
+    }
+  }
+
+  Future<void> _adicionarEndereco() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnderecoCadastroPage(),
+      ),
+    );
+
+    if (result == true) {
+      _listarEnderecos(); // Atualiza a lista após adicionar
     }
   }
 
@@ -49,85 +97,125 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Endereços Cadastrados'),
-        backgroundColor: Colors.red, // Cor padrão
+        backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
         centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          _enderecos.isEmpty
-              ? Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.red,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Pesquisar endereço...',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(8.0),
-                  itemCount: _enderecos.length,
-                  itemBuilder: (context, index) {
-                    final endereco = _enderecos[index];
-                    return Card(
-                      elevation: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16.0),
-                        leading: Icon(
-                          Icons.location_on,
-                          size: 50,
-                          color: Colors.red,
-                        ),
-                        title: Text(
-                          '${endereco['rua']} - ${endereco['bairro']}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${endereco['cidade']}, ${endereco['estado']}',
-                            ),
-                          ],
-                        ),
-                        trailing: Text(
-                          'ID: ${endereco['id']}',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context, endereco['id']);
-                        },
-                      ),
-                    );
+                ),
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    _listarEnderecos(_searchController.text);
                   },
                 ),
-          Positioned(
-            bottom: 20,
-            left: MediaQuery.of(context).size.width * 0.1,
-            right: MediaQuery.of(context).size.width * 0.1,
-            child: ElevatedButton.icon(
-              onPressed: _abrirCadastroEndereco,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, // Cor de fundo
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              icon: Icon(Icons.add, color: Colors.white),
-              label: Text(
-                'Adicionar Novo Endereço',
-                style: TextStyle(color: Colors.white),
-              ),
+              ],
             ),
           ),
+          Expanded(
+            child: _enderecos.isEmpty
+                ? Center(
+                    child: Text(
+                      _searchController.text.isEmpty
+                          ? 'Nenhum endereço cadastrado.'
+                          : 'Não foram encontrados resultados.',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 18,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _enderecos.length,
+                    itemBuilder: (context, index) {
+                      final endereco = _enderecos[index];
+                      final id = endereco['id'];
+                      final rua = endereco['rua'];
+                      final numero = endereco['numero'];
+
+                      return Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16.0),
+                          leading: Icon(
+                            Icons.location_on,
+                            size: 50,
+                            color: Color(0xFFFF0000), // Cor igual ao padrão
+                          ),
+                          title: Text(
+                            '$rua, $numero',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFFFF0000), // Cor igual ao padrão
+                            ),
+                          ),
+                          trailing: id != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon:
+                                          Icon(Icons.edit, color: Colors.blue),
+                                      onPressed: () => _editarEndereco(id),
+                                    ),
+                                    IconButton(
+                                      icon:
+                                          Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () => _deletarEndereco(id),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.check,
+                                          color: Colors.green),
+                                      onPressed: () {
+                                        Navigator.pop(
+                                          context,
+                                          {
+                                            'id':
+                                                id, // Adiciona o ID do endereço aqui
+                                            'rua': rua,
+                                            'numero': numero,
+                                          },
+                                        ); // Retorna o nome da rua e o número
+                                      },
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
+          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _adicionarEndereco,
+        child: Icon(Icons.add),
+        backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
       ),
     );
   }

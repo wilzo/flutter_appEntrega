@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 
 class EntregaService {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-
   Connection? _connection;
 
   // Conectar ao banco de dados
@@ -44,11 +43,7 @@ class EntregaService {
       await connect();
     }
 
-    // Formatar data e hora no formato que o banco de dados espera
     String formattedData = DateFormat('yyyy-MM-dd').format(dataEntrega);
-
-    // Ajustar o formato da hora, se necessário
-    // No caso de já estar no formato correto, apenas passe o valor recebido
     String formattedHora = horaEntrega;
 
     String query = '''
@@ -68,85 +63,136 @@ class EntregaService {
     );
   }
 
-  Future<List<Map<String, dynamic>>> listarEntregas() async {
+  Future<List<Map<String, dynamic>>> listarEntregas([String searchQuery = '']) async {
     if (_connection == null) {
       await connect();
     }
 
-    final results = await _connection!.execute('''
+    String sql = '''
       SELECT e.id_Entrega, e.data, e.hora_Entrega, ent.nome AS entregador_nome, c.nome AS cliente_nome, i.descricao, e.status
       FROM entregas e
       LEFT JOIN entregador ent ON e.id_Entregador = ent.id_Entregador
       LEFT JOIN clientes c ON e.id_Cliente = c.id
       LEFT JOIN itens_entrega i ON e.id_Itens = i.id_Itens
-    ''');
+      WHERE ent.nome LIKE \$1 OR c.nome LIKE \$1 OR i.descricao LIKE \$1
+      ORDER BY e.data
+    ''';
 
-    return results.map((row) => row.toColumnMap()).toList();
+    List<List<dynamic>> results = await _connection!.execute(
+      sql,
+      parameters: [
+        '%$searchQuery%',
+      ],
+    );
+
+    List<Map<String, dynamic>> entregas = [];
+
+    for (var row in results) {
+      Map<String, dynamic> map = {
+        'id_Entrega': row[0],
+        'data': row[1],
+        'hora_Entrega': row[2],
+        'entregador_nome': row[3],
+        'cliente_nome': row[4],
+        'descricao': row[5],
+        'status': row[6],
+      };
+      entregas.add(map);
+    }
+
+    return entregas;
   }
 
-Future<List<Map<String, dynamic>>> getEntregas() async {
-  if (_connection == null) {
-    await connect();
-  }
-  final results = await _connection!.execute(
-    r'''
-    SELECT 
-      e.id_Entrega,
-      e.data,
-      e.hora_Entrega,
-      e.id_Entregador,
-      e.id_Cliente,
-      e.id_Itens,
-      e.status,
-      et.nome AS entregador_nome,
-      c.nome AS cliente_nome,
-      i.descricao AS descricao
-    FROM 
-      entregas e
-    LEFT JOIN 
-      entregador et ON e.id_Entregador = et.id_Entregador
-    LEFT JOIN 
-      clientes c ON e.id_Cliente = e.id_Cliente
-    LEFT JOIN 
-      itens_entrega i ON e.id_Itens = i.id_Itens
-    '''
-  );
-
-  List<Map<String, dynamic>> entregas = results.map((row) {
-    return {
-      'id_Entrega': row[0],
-      'data': row[1],
-      'hora_Entrega': row[2],
-      'id_Entregador': row[3],
-      'id_Cliente': row[4],
-      'id_Itens': row[5],
-      'status': row[6],
-      'entregador_nome': row[7],
-      'cliente_nome': row[8],
-      'descricao': row[9],
-    };
-  }).toList();
-
-  return entregas;
-}
-
-
-
-  Future<void> updateEntregaStatus(int idEntrega, String status) async {
+  Future<void> deleteEntrega(int idEntrega) async {
     if (_connection == null) {
       await connect();
     }
 
-    String query = '''
-      UPDATE entregas
-      SET status = \$1
-      WHERE id_Entrega = \$2
-    ''';
+    print('Tentando deletar entrega com ID: $idEntrega');
 
-    await _connection!.execute(
-      query,
-      parameters: [status, idEntrega],
-    );
+    try {
+      await _connection!.execute(
+        'DELETE FROM entregas WHERE id_Entrega = \$1',
+        parameters: [idEntrega],
+      );
+    } catch (e) {
+      print('Erro ao deletar entrega: $e');
+    }
+  }
+
+  Future<void> updateEntrega(
+    int idEntrega,
+    DateTime dataEntrega,
+    String horaEntrega,
+    int idEntregador,
+    int idCliente,
+    int idItens,
+    String status
+  ) async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    String formattedData = DateFormat('yyyy-MM-dd').format(dataEntrega);
+    String formattedHora = horaEntrega;
+
+    try {
+      await _connection!.execute(
+        '''
+        UPDATE entregas
+        SET data = \$1, hora_Entrega = \$2, id_Entregador = \$3, id_Cliente = \$4, id_Itens = \$5, status = \$6
+        WHERE id_Entrega = \$7
+        ''',
+        parameters: [
+          formattedData,
+          formattedHora,
+          idEntregador,
+          idCliente,
+          idItens,
+          status,
+          idEntrega,
+        ],
+      );
+    } catch (e) {
+      print('Erro ao atualizar entrega: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> listarEntregaPorId(int idEntrega) async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    try {
+      List<List<dynamic>> results = await _connection!.execute(
+        '''
+        SELECT e.id_Entrega, e.data, e.hora_Entrega, ent.nome AS entregador_nome, c.nome AS cliente_nome, i.descricao, e.status
+        FROM entregas e
+        LEFT JOIN entregador ent ON e.id_Entregador = ent.id_Entregador
+        LEFT JOIN clientes c ON e.id_Cliente = c.id
+        LEFT JOIN itens_entrega i ON e.id_Itens = i.id_Itens
+        WHERE e.id_Entrega = \$1
+        ''',
+        parameters: [idEntrega],
+      );
+
+      if (results.isEmpty) return null;
+
+      var row = results.first;
+      Map<String, dynamic> map = {
+        'id_Entrega': row[0],
+        'data': row[1],
+        'hora_Entrega': row[2],
+        'entregador_nome': row[3],
+        'cliente_nome': row[4],
+        'descricao': row[5],
+        'status': row[6],
+      };
+      return map;
+    } catch (e) {
+      print('Erro ao listar entrega por ID: $e');
+      return null;
+    }
   }
 
   Future<void> checkAndUpdateEntregaStatus() async {
@@ -164,23 +210,29 @@ Future<List<Map<String, dynamic>>> getEntregas() async {
 
     await _connection!.execute(query);
   }
-Future<void> atualizarStatusEntrega(int idEntrega, String novoStatus) async {
-  if (_connection == null) {
-    await connect();
+
+  Future<void> atualizarStatusEntrega(int idEntrega, String novoStatus) async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    String query = '''
+      UPDATE entregas
+      SET status = \$1
+      WHERE id_Entrega = \$2
+    ''';
+
+    await _connection!.execute(
+      query,
+      parameters: [
+        novoStatus,
+        idEntrega,
+      ],
+    );
   }
 
-  String query = '''
-    UPDATE entregas
-    SET status = \$1
-    WHERE id_Entrega = \$2
-  ''';
-
-  await _connection!.execute(
-    query,
-    parameters: [
-      novoStatus, // O novo status que será atribuído à entrega
-      idEntrega, // O ID da entrega que será atualizada
-    ],
-  );
-}
+  // Novo método para pegar todas as entregas
+  Future<List<Map<String, dynamic>>> getEntregas() async {
+    return await listarEntregas();
+  }
 }
