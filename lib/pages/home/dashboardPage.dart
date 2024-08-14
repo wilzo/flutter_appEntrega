@@ -7,6 +7,8 @@ import 'package:flutter_projeto/pages/cadastro/entregadorCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
+import 'package:url_launcher/url_launcher.dart'; // Adicione isso no início do seu arquivo
+
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -133,84 +135,152 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  Widget _buildEntregaCard(Map<String, dynamic> entrega) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 5),
-      child: Padding(
-        padding: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Entrega #${entrega['id_Entrega']}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              entrega['descricao'],
-              style: TextStyle(fontSize: 12),
-            ),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 14),
-                SizedBox(width: 5),
-                Text(
-                  _formatarData(entrega['data']),
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 14),
-                SizedBox(width: 5),
-                Text(
-                  _formatarHora(entrega['hora_Entrega']),
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Icon(Icons.person, size: 14),
-                SizedBox(width: 5),
-                Text(
-                  entrega['entregador_nome'] ?? 'N/A',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Icon(Icons.person_outline, size: 14),
-                SizedBox(width: 5),
-                Text(
-                  entrega['cliente_nome'] ?? 'N/A',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            SizedBox(height: 5),
-            if (entrega['status'] == 'pendente' || entrega['status'] == 'futura')
-              ElevatedButton(
-                onPressed: () => _concluirEntrega(entrega['id_Entrega']),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                ),
-                child: Text('Entrega Concluída', style: TextStyle(fontSize: 12)),
-              ),
-          ],
-        ),
-      ),
+   Future<void> _abrirLink(String link) async {
+  if (await canLaunch(link)) {
+    await launch(link);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Não foi possível abrir o link.')),
     );
   }
+}
+
+Future<void> _mostrarDialogo(String link) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false, // O usuário deve clicar no botão para fechar
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Abrir Google Maps'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              Text('Deseja abrir o link no Google Maps?'),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Abrir'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (link != null && link.isNotEmpty) {
+                _abrirLink(link);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('URL do endereço não disponível')),
+                );
+              }
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Widget _buildEntregaCard(Map<String, dynamic> entrega) {
+  String? urlEndereco = entrega['link'] as String?; // Certifique-se de que 'link' é o nome correto
+
+  return Card(
+    margin: EdgeInsets.symmetric(vertical: 5),
+    child: Padding(
+      padding: EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Entrega #${entrega['id_Entrega']}',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            entrega['descricao'],
+            style: TextStyle(fontSize: 12),
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Icon(Icons.calendar_today, size: 14),
+              SizedBox(width: 5),
+              Text(
+                _formatarData(entrega['data']),
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Icon(Icons.access_time, size: 14),
+              SizedBox(width: 5),
+              Text(
+                _formatarHora(entrega['hora_Entrega']),
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Icon(Icons.person, size: 14),
+              SizedBox(width: 5),
+              Text(
+                entrega['entregador_nome'] ?? 'N/A',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),
+          Row(
+            children: [
+              Icon(Icons.person_outline, size: 14),
+              SizedBox(width: 5),
+              Text(
+                entrega['cliente_nome'] ?? 'N/A',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),
+          if (entrega['status'] == 'pendente' || entrega['status'] == 'futura')
+            ElevatedButton(
+              onPressed: () => _concluirEntrega(entrega['id_Entrega']),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: Text('Entrega Concluída', style: TextStyle(fontSize: 12)),
+            ),
+          // Botão de localização
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: Icon(Icons.map, size: 24, color: Colors.blue),
+              onPressed: () {
+                if (urlEndereco != null && urlEndereco.isNotEmpty) {
+                  _mostrarDialogo(urlEndereco);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('URL do endereço não disponível')),
+                  );
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildEntregaColumn(String title, List<Map<String, dynamic>> entregas, Color color) {
   return Container(

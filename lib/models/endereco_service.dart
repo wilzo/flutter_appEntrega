@@ -14,6 +14,7 @@ class EnderecoService {
     }
   }
 
+  // Criar a tabela de endereços com o campo link
   Future<void> createEnderecoTable() async {
     if (_connection == null) {
       await connect();
@@ -26,7 +27,8 @@ class EnderecoService {
           numero TEXT NOT NULL,
           bairro TEXT NOT NULL,
           cidade TEXT NOT NULL,
-          estado TEXT NOT NULL
+          estado TEXT NOT NULL,
+          link TEXT NOT NULL
         )
       ''');
     } catch (e) {
@@ -34,20 +36,23 @@ class EnderecoService {
     }
   }
 
+  // Criar um novo endereço e armazenar o link gerado
   Future<void> createEndereco(String rua, String numero, String bairro, String cidade, String estado) async {
     if (_connection == null) {
       await connect();
     }
     try {
+      String link = 'https://maps.google.com/?q=${rua.replaceAll(' ', '+')},${bairro.replaceAll(' ', '+')},${numero.replaceAll(' ', '+')}';
       await _connection!.execute(
-        r'INSERT INTO endereco (rua, numero, bairro, cidade, estado) VALUES ($1, $2, $3, $4, $5)',
-        parameters: [rua, numero, bairro, cidade, estado],
+        r'INSERT INTO endereco (rua, numero, bairro, cidade, estado, link) VALUES ($1, $2, $3, $4, $5, $6)',
+        parameters: [rua, numero, bairro, cidade, estado, link],
       );
     } catch (e) {
       print('Erro ao criar endereço: $e');
     }
   }
 
+  // Obter endereço por ID, incluindo o link
   Future<Map<String, dynamic>?> getEnderecoPorId(int id) async {
     if (_connection == null) {
       await connect();
@@ -65,6 +70,7 @@ class EnderecoService {
         'bairro': results.first[3],
         'cidade': results.first[4],
         'estado': results.first[5],
+        'link': results.first[6],
       };
     } catch (e) {
       print('Erro ao obter endereço por ID: $e');
@@ -72,20 +78,23 @@ class EnderecoService {
     }
   }
 
+  // Atualizar um endereço e gerar um novo link
   Future<void> updateEndereco(int id, String rua, String numero, String bairro, String cidade, String estado) async {
     if (_connection == null) {
       await connect();
     }
     try {
+      String link = 'https://maps.google.com/?q=${rua.replaceAll(' ', '+')},${bairro.replaceAll(' ', '+')},${numero.replaceAll(' ', '+')}';
       await _connection!.execute(
-        r'UPDATE endereco SET rua = $1, numero = $2, bairro = $3, cidade = $4, estado = $5 WHERE id = $6',
-        parameters: [rua, numero, bairro, cidade, estado, id],
+        r'UPDATE endereco SET rua = $1, numero = $2, bairro = $3, cidade = $4, estado = $5, link = $6 WHERE id = $7',
+        parameters: [rua, numero, bairro, cidade, estado, link, id],
       );
     } catch (e) {
       print('Erro ao atualizar endereço: $e');
     }
   }
 
+  // Deletar um endereço
   Future<void> deleteEndereco(int id) async {
     if (_connection == null) {
       await connect();
@@ -100,6 +109,7 @@ class EnderecoService {
     }
   }
 
+  // Verificar se um endereço já existe
   Future<bool> verificarEnderecoExiste(String rua, String numero, String bairro, String cidade, String estado) async {
     if (_connection == null) {
       await connect();
@@ -116,6 +126,7 @@ class EnderecoService {
     }
   }
 
+  // Listar endereços, incluindo o link
   Future<List<Map<String, dynamic>>> listarEnderecos([String searchQuery = '']) async {
     if (_connection == null) {
       await connect();
@@ -123,7 +134,7 @@ class EnderecoService {
     try {
       List<List<dynamic>> results = await _connection!.execute(
         '''
-        SELECT id, rua, numero, bairro, cidade, estado
+        SELECT id, rua, numero, bairro, cidade, estado, link
         FROM endereco
         WHERE rua LIKE \$1 OR numero LIKE \$1 OR bairro LIKE \$1 OR cidade LIKE \$1 OR estado LIKE \$1
         ORDER BY rua
@@ -140,6 +151,7 @@ class EnderecoService {
           'bairro': row[3],
           'cidade': row[4],
           'estado': row[5],
+          'link': row[6],
         };
         enderecos.add(map);
       }

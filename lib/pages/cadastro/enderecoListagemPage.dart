@@ -3,6 +3,7 @@ import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/pages/cadastro/enderecoCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/editEnderecoPage.dart';
 import 'package:flutter_projeto/models/endereco_service.dart';
+import 'package:url_launcher/url_launcher.dart'; // Para abrir o link do Google Maps
 
 class EnderecoListagemPage extends StatefulWidget {
   @override
@@ -92,6 +93,48 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     }
   }
 
+  void _abrirLink(String link) async {
+    if (await canLaunch(link)) {
+      await launch(link);
+    } else {
+      throw 'Não foi possível abrir o link: $link';
+    }
+  }
+
+  Future<void> _mostrarDialogo(String link) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // O usuário deve clicar no botão para fechar
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Abrir Google Maps'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Deseja abrir o link no Google Maps?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Abrir'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _abrirLink(link);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,6 +193,7 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                       final id = endereco['id'];
                       final rua = endereco['rua'];
                       final numero = endereco['numero'];
+                      final link = endereco['link']; // Adiciona o campo link
 
                       return Card(
                         elevation: 4,
@@ -178,30 +222,31 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon:
-                                          Icon(Icons.edit, color: Colors.blue),
+                                      icon: Icon(Icons.edit, color: Colors.blue),
                                       onPressed: () => _editarEndereco(id),
                                     ),
                                     IconButton(
-                                      icon:
-                                          Icon(Icons.delete, color: Colors.red),
+                                      icon: Icon(Icons.delete, color: Colors.red),
                                       onPressed: () => _deletarEndereco(id),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.check,
-                                          color: Colors.green),
+                                      icon: Icon(Icons.check, color: Colors.green),
                                       onPressed: () {
                                         Navigator.pop(
                                           context,
                                           {
-                                            'id':
-                                                id, // Adiciona o ID do endereço aqui
+                                            'id': id, // Adiciona o ID do endereço aqui
                                             'rua': rua,
                                             'numero': numero,
                                           },
                                         ); // Retorna o nome da rua e o número
                                       },
                                     ),
+                                    if (link != null && link.isNotEmpty)
+                                      IconButton(
+                                        icon: Icon(Icons.map, color: Colors.blue),
+                                        onPressed: () => _mostrarDialogo(link),
+                                      ),
                                   ],
                                 )
                               : null,

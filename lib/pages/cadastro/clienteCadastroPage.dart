@@ -58,22 +58,22 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
     }
   }
 
-  void _abrirListagemEnderecos() async {
-  final resultado = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
-  );
+    void _abrirListagemEnderecos() async {
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
+    );
 
-  if (resultado != null && resultado is Map<String, dynamic>) {
-    print('Resultado: $resultado'); // Adicione isto
-    setState(() {
-      _enderecoSelecionadoDescricao =
-          '${resultado['rua']}, ${resultado['numero']}';
-      _enderecoSelecionadoId = resultado['id'];
-    });
-    print('ID Selecionado: $_enderecoSelecionadoId'); // E isto
+    if (resultado != null && resultado is Map<String, dynamic>) {
+      print('Resultado: $resultado'); // Adicione isto
+      setState(() {
+        _enderecoSelecionadoDescricao =
+            '${resultado['rua']}, ${resultado['numero']}';
+        _enderecoSelecionadoId = resultado['id'];
+      });
+      print('ID Selecionado: $_enderecoSelecionadoId'); // E isto
+    }
   }
-}
 
 
   void _showSuccessDialog() {

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/models/itens_service.dart';
-
 
 class ItemSelecaoPage extends StatefulWidget {
   @override
@@ -10,11 +8,17 @@ class ItemSelecaoPage extends StatefulWidget {
 
 class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
   final TextEditingController _descricaoController = TextEditingController();
-    final ItensService _itensService = ItensService();
+  final ItensService _itensService = ItensService();
 
   bool _isLoading = false;
 
-  void _adicionarItem() async {
+  @override
+  void dispose() {
+    _descricaoController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _adicionarItem() async {
     setState(() {
       _isLoading = true;
     });
@@ -33,7 +37,7 @@ class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
 
     try {
       final int? idNovoItem = await _itensService.createItem(descricao);
-      _showSuccessDialog(idNovoItem);
+      _showSuccessDialog(idNovoItem, descricao); // Passa o ID e a descrição para o diálogo de sucesso
     } catch (e) {
       print('Erro ao adicionar item: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -46,7 +50,7 @@ class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
     }
   }
 
-  void _showSuccessDialog(int? idNovoItem) {
+  void _showSuccessDialog(int? idNovoItem, String descricao) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -56,8 +60,11 @@ class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pop(context, idNovoItem); // Retorna o ID do novo item
+                Navigator.of(context).pop(); // Fecha o diálogo
+                Navigator.pop(context, {
+                  'id': idNovoItem, // Retorna o ID do item adicionado
+                  'descricao': descricao, // Retorna a descrição do item adicionado
+                });
               },
               child: Text('OK'),
             ),
@@ -73,6 +80,7 @@ class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
       appBar: AppBar(
         title: Text('Adicionar Item'),
         centerTitle: true,
+        backgroundColor: Color(0xFFFF0000), // Cor de fundo do AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -92,6 +100,10 @@ class _ItemSelecaoPageState extends State<ItemSelecaoPage> {
               child: _isLoading
                   ? CircularProgressIndicator()
                   : Text('Adicionar Item'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFFF0000), // Cor de fundo do botão
+                disabledBackgroundColor: Colors.white, // Cor do texto do botão
+              ),
             ),
           ],
         ),

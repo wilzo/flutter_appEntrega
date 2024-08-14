@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/models/entregador_service.dart';
 
-
 class EntregadorSelecaoPage extends StatefulWidget {
   @override
   _EntregadorSelecaoPageState createState() => _EntregadorSelecaoPageState();
@@ -10,7 +9,7 @@ class EntregadorSelecaoPage extends StatefulWidget {
 
 class _EntregadorSelecaoPageState extends State<EntregadorSelecaoPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-    final EntregadorService _entregadorService = EntregadorService();
+  final EntregadorService _entregadorService = EntregadorService();
 
   List<Map<String, dynamic>> _entregadores = [];
   bool _isLoading = false;
@@ -40,8 +39,12 @@ class _EntregadorSelecaoPageState extends State<EntregadorSelecaoPage> {
     }
   }
 
-  void _selecionarEntregador(int id) {
-    Navigator.pop(context, id);
+  void _selecionarEntregador(String nome, String cnh, int id) {
+    Navigator.pop(context, {
+      'nome': nome,
+      'cnh': cnh,
+      'id': id,
+    });
   }
 
   @override
@@ -80,10 +83,13 @@ class _EntregadorSelecaoPageState extends State<EntregadorSelecaoPage> {
                   itemBuilder: (context, index) {
                     final entregador = _entregadores[index];
                     final id = entregador['id_Entregador'];
+                    final nome = entregador['nome'];
+                    final cnh = entregador['cnh'];
 
                     return Card(
                       elevation: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 16.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -95,17 +101,31 @@ class _EntregadorSelecaoPageState extends State<EntregadorSelecaoPage> {
                           color: Colors.red,
                         ),
                         title: Text(
-                          entregador['nome'] ?? 'Nome',
+                          nome ?? 'Nome',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                             color: Colors.red,
                           ),
                         ),
-                        subtitle: Text('Telefone: ${entregador['telefone'] ?? 'Telefone'}'),
-                        onTap: () {
-                          _selecionarEntregador(id);
-                        },
+                        subtitle: Text(
+                            'CNH: ${cnh ?? 'CNH'}\nTelefone: ${entregador['telefone'] ?? 'Telefone'}'),
+                        trailing: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(
+                              context,
+                              {
+                                'id': id, // Adiciona o ID do endereço aqui
+                                'cnh': cnh,
+                                'nome': nome,
+                              },
+                            ); // Retorna o nome da rua e o número
+                          },
+                          child: Text('Selecionar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                        ),
                       ),
                     );
                   },

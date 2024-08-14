@@ -31,8 +31,11 @@ class _ClienteSelecaoPageState extends State<ClienteSelecaoPage> {
     }
   }
 
-  void _selecionarCliente(int clienteId) {
-    Navigator.pop(context, clienteId);
+  void _selecionarCliente(String nome, int id) {
+    Navigator.pop(context, {
+      'nome': nome,
+      'id': id,
+    });
   }
 
   @override
@@ -60,6 +63,7 @@ class _ClienteSelecaoPageState extends State<ClienteSelecaoPage> {
               itemBuilder: (context, index) {
                 final cliente = _clientes[index];
                 final id = cliente['id'];
+                final nome = cliente['nome'] ?? 'Nome';
 
                 return Card(
                   elevation: 4,
@@ -76,50 +80,27 @@ class _ClienteSelecaoPageState extends State<ClienteSelecaoPage> {
                       color: Color(0xFFFF0000),
                     ),
                     title: Text(
-                      cliente['nome'] ?? 'Nome',
+                      nome,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                         color: Color(0xFFFF0000),
                       ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.phone, size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text(
-                                'Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.email, size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Text('Email: ${cliente['email'] ?? 'Email'}'),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.location_on,
-                                size: 16, color: Colors.grey),
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                'Endereço: ${cliente['rua'] ?? 'Rua'}, ${cliente['numero'] ?? 'Número'}, ${cliente['bairro'] ?? 'Bairro'}, ${cliente['cidade'] ?? 'Cidade'}, ${cliente['estado'] ?? 'Estado'}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    onTap: () => _selecionarCliente(id),
+                    subtitle: Text('Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.check, color: Color(0xFFFF0000)),
+                        onPressed: () {
+                            Navigator.pop(
+                              context,
+                              {
+                                'id': id, // Adiciona o ID do endereço aqui
+                                'nome': nome,
+                              },
+                            ); // Retorna o nome da rua e o número
+                          }, // R}                ),
                   ),
+                  )
                 );
               },
             ),
