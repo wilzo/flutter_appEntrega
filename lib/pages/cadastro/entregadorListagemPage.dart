@@ -47,7 +47,7 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Deletar'),
+            child: Text('Excluir'),
           ),
         ],
       ),

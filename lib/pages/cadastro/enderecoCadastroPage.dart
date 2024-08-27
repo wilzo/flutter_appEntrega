@@ -17,60 +17,79 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
   final EnderecoService _enderecoService = EnderecoService();
 
   bool _isLoading = false;
+void _cadastrarEndereco() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-  void _cadastrarEndereco() async {
+  String rua = _ruaController.text.trim();
+  String numero = _numeroController.text.trim();
+  String bairro = _bairroController.text.trim();
+  String cidade = _cidadeController.text.trim();
+  String cep = _cepController.text.trim();
+
+  if (rua.isEmpty ||
+      numero.isEmpty ||
+      bairro.isEmpty ||
+      cidade.isEmpty ||
+      cep.isEmpty) {
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
-
-    String rua = _ruaController.text.trim();
-    String numero = _numeroController.text.trim();
-    String bairro = _bairroController.text.trim();
-    String cidade = _cidadeController.text.trim();
-    String cep = _cepController.text.trim();
-
-    if (rua.isEmpty ||
-        numero.isEmpty ||
-        bairro.isEmpty ||
-        cidade.isEmpty ||
-        cep.isEmpty) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Todos os campos são obrigatórios')),
-      );
-      return;
-    }
-
-    try {
-      await _enderecoService.createEnderecoTable();
-
-      bool enderecoExiste = await _enderecoService.verificarEnderecoExiste(
-          rua, numero, bairro, cidade, cep);
-      if (enderecoExiste) {
-        bool criarMesmoAssim = await _mostrarPopupEnderecoExistente();
-        if (!criarMesmoAssim) {
-          setState(() {
-            _isLoading = false;
-          });
-          return;
-        }
-      }
-
-      await _enderecoService.createEndereco(rua, numero, bairro, cidade, cep);
-      Navigator.pop(context, '$rua, $numero, $bairro, $cidade, $cep');
-    } catch (e) {
-      print('Erro ao cadastrar endereço: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao cadastrar endereço: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Todos os campos são obrigatórios')),
+    );
+    return;
   }
+
+  try {
+    await _enderecoService.createEnderecoTable();
+
+    bool enderecoExiste = await _enderecoService.verificarEnderecoExiste(
+        rua, numero, bairro, cidade, cep);
+    if (enderecoExiste) {
+      bool criarMesmoAssim = await _mostrarPopupEnderecoExistente();
+      if (!criarMesmoAssim) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+    }
+
+    await _enderecoService.createEndereco(rua, numero, bairro, cidade, cep);
+
+    // Exibir pop-up de confirmação
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sucesso'),
+          content: Text('Endereço cadastrado com sucesso!'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o pop-up
+                Navigator.pop(context, true); // Retorna à tela anterior e atualiza a lista
+              },
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    print('Erro ao cadastrar endereço: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao cadastrar endereço: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
+
 
   Future<bool> _mostrarPopupEnderecoExistente() async {
     return await showDialog<bool>(

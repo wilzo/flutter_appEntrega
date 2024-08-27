@@ -30,6 +30,19 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
     _carregarDados();
   }
 
+bool validarCNH(String cnh) {
+  // Verifica se a CNH tem exatamente 11 dígitos e é composta apenas por números
+  final RegExp regex = RegExp(r'^\d{11}$');
+  return regex.hasMatch(cnh);
+}
+
+ bool validarTelefone(String telefone) {
+    final telefoneRegex = RegExp(
+      r'^\+?[0-9]{10,15}$', // Ajuste conforme o formato esperado
+    );
+    return telefoneRegex.hasMatch(telefone);
+  }
+
   Future<void> _carregarDados() async {
     try {
       await _databaseHelper.connect();
@@ -52,43 +65,90 @@ class _EditEntregadorPageState extends State<EditEntregadorPage> {
       await _databaseHelper.closeConnection();
     }
   }
-
   Future<void> _atualizarEntregador() async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  String nome = _nomeController.text.trim();
+  String telefone = _telefoneController.text.trim();
+  String cnh = _cnhController.text.trim();
+  String veiculo = _veiculoController.text.trim();
+
+  // Verificar se algum dos campos está vazio
+  if (nome.isEmpty || telefone.isEmpty || cnh.isEmpty || veiculo.isEmpty) {
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
-
-    try {
-      await _databaseHelper.connect();
-      await _entregadorService.updateEntregador(
-        widget.entregadorId,
-        _nomeController.text,
-        _telefoneController.text,
-        _cnhController.text,
-        _veiculoController.text,
-      );
-      Navigator.pop(context);
-    } catch (e) {
-      print('Erro ao atualizar entregador: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar entregador: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-      await _databaseHelper.closeConnection();
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Todos os campos são obrigatórios')),
+    );
+    return;
   }
 
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _telefoneController.dispose();
-    _cnhController.dispose();
-    _veiculoController.dispose();
-    super.dispose();
+  // Validar telefone
+  if (!validarTelefone(telefone)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Telefone inválido')),
+    );
+    return;
   }
+
+  // Validar CNH
+  if (!validarCNH(cnh)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('CNH inválida')),
+    );
+    return;
+  }
+
+  try {
+    await _databaseHelper.connect();
+    await _entregadorService.updateEntregador(
+      widget.entregadorId,
+      nome,
+      telefone,
+      cnh,
+      veiculo,
+    );
+
+    // Exibir pop-up de confirmação
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sucesso'),
+          content: Text('Entregador atualizado com sucesso!'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o pop-up
+                Navigator.pop(context, true); // Retorna à tela anterior e atualiza a lista
+              },
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    print('Erro ao atualizar entregador: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao atualizar entregador: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+    await _databaseHelper.closeConnection();
+  }
+}
 
   @override
   Widget build(BuildContext context) {

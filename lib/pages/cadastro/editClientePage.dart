@@ -1,75 +1,127 @@
-  import 'package:flutter/material.dart';
-  import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
-  import 'package:flutter_projeto/models/databaseHelper.dart';
-  import 'package:flutter_projeto/models/cliente_service.dart';
+import 'package:flutter/material.dart';
+import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
+import 'package:flutter_projeto/models/databaseHelper.dart';
+import 'package:flutter_projeto/models/cliente_service.dart';
 
-  class EditClientePage extends StatefulWidget {
-    final int clienteId;
+class EditClientePage extends StatefulWidget {
+  final int clienteId;
 
-    EditClientePage({required this.clienteId});
+  EditClientePage({required this.clienteId});
 
-    @override
-    _EditClientePageState createState() => _EditClientePageState();
+  @override
+  _EditClientePageState createState() => _EditClientePageState();
+}
+
+class _EditClientePageState extends State<EditClientePage> {
+  final ClienteService _clienteService = ClienteService();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  late TextEditingController _nomeController;
+  late TextEditingController _telefoneController;
+  late TextEditingController _emailController;
+  int? _enderecoSelecionado;
+
+  int? _enderecoSelecionadoId;
+  int? _enderecoSelecionadoIdArmazenado; // Nova variável para armazenar o ID
+  String? _enderecoSelecionadoDescricao;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nomeController = TextEditingController();
+    _telefoneController = TextEditingController();
+    _emailController = TextEditingController();
+    _carregarDados();
   }
 
-  class _EditClientePageState extends State<EditClientePage> {
-    final ClienteService _clienteService = ClienteService();
-    final DatabaseHelper _databaseHelper = DatabaseHelper();
-    late TextEditingController _nomeController;
-    late TextEditingController _telefoneController;
-    late TextEditingController _emailController;
-    int? _enderecoSelecionado;
-    
-    int? _enderecoSelecionadoId;
-    int? _enderecoSelecionadoIdArmazenado; // Nova variável para armazenar o ID
-    String? _enderecoSelecionadoDescricao; 
-    bool _isLoading = false;
+  bool validarEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    return emailRegex.hasMatch(email);
+  }
 
-    @override
-    void initState() {
-      super.initState();
-      _nomeController = TextEditingController();
-      _telefoneController = TextEditingController();
-      _emailController = TextEditingController();
-      _carregarDados();
-    }
+  bool validarTelefone(String telefone) {
+    final telefoneRegex = RegExp(
+      r'^\+?[0-9]{10,15}$', 
+    );
+    return telefoneRegex.hasMatch(telefone);
+  }
 
-    Future<void> _carregarDados() async {
-      try {
-        await _databaseHelper.connect();
-        final cliente =
-            await _clienteService.listarClientePorId(widget.clienteId);
+  Future<void> _carregarDados() async {
+    try {
+      await _databaseHelper.connect();
+      final cliente =
+          await _clienteService.listarClientePorId(widget.clienteId);
 
-        if (cliente != null) {
-          setState(() {
-            _nomeController.text = cliente['nome'] ?? '';
-            _telefoneController.text = cliente['telefone'] ?? '';
-            _emailController.text = cliente['email'] ?? '';
-            _enderecoSelecionadoId = cliente['endereco_id'];
-          });
-        } else {
-          print('Cliente não encontrado');
-        }
-      } catch (e) {
-        print('Erro ao carregar dados: $e');
-      } finally {
-        await _databaseHelper.closeConnection();
+      if (cliente != null) {
+        setState(() {
+          _nomeController.text = cliente['nome'] ?? '';
+          _telefoneController.text = cliente['telefone'] ?? '';
+          _emailController.text = cliente['email'] ?? '';
+          _enderecoSelecionadoId = cliente['endereco_id'];
+        });
+      } else {
+        print('Cliente não encontrado');
       }
+    } catch (e) {
+      print('Erro ao carregar dados: $e');
+    } finally {
+      await _databaseHelper.closeConnection();
     }
+  }
 
-    Future<void> _atualizarCliente() async {
+ Future<void> _atualizarCliente() async {
   setState(() {
     _isLoading = true;
   });
+
+  String nome = _nomeController.text.trim();
+  String telefone = _telefoneController.text.trim();
+  String email = _emailController.text.trim();
+  int? enderecoId = _enderecoSelecionadoId;
+
+  // Verificar se algum dos campos está vazio ou nulo
+  if (nome.isEmpty || telefone.isEmpty || email.isEmpty || enderecoId == null) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Todos os campos são obrigatórios')),
+    );
+    return;
+  }
+
+  // Validar e-mail
+  if (!validarEmail(email)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('E-mail inválido')),
+    );
+    return;
+  }
+
+  // Validar telefone
+  if (!validarTelefone(telefone)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Telefone inválido')),
+    );
+    return;
+  }
 
   try {
     // Atualiza o cliente no banco de dados
     await _clienteService.updateCliente(
       widget.clienteId,
-      _nomeController.text,
-      _telefoneController.text,
-      _emailController.text,
-      _enderecoSelecionadoId,
+      nome,
+      telefone,
+      email,
+      enderecoId,
     );
 
     // Exibindo o pop-up de sucesso
@@ -84,7 +136,7 @@
               child: const Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop(); // Fecha o pop-up
-                Navigator.of(context).pop(); // Volta para a tela anterior
+                Navigator.pop(context, true); // Volta para a tela anterior
                 setState(() {
                   _isLoading = false;
                 });
@@ -118,33 +170,32 @@
     );
   }
 }
+  void _abrirListagemEnderecos() async {
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
+    );
 
-    void _abrirListagemEnderecos() async {
-      final resultado = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
-      );
-
-      if (resultado != null && resultado is Map<String, dynamic>) {
-        print('Resultado: $resultado'); // Adicione isto
-        setState(() {
-          _enderecoSelecionadoDescricao =
-              '${resultado['rua']}, ${resultado['numero']}';
-          _enderecoSelecionadoId = resultado['id'];
-        });
-        print('ID Selecionado: $_enderecoSelecionadoId'); // E isto
-      }
+    if (resultado != null && resultado is Map<String, dynamic>) {
+      print('Resultado: $resultado'); // Adicione isto
+      setState(() {
+        _enderecoSelecionadoDescricao =
+            '${resultado['rua']}, ${resultado['numero']}';
+        _enderecoSelecionadoId = resultado['id'];
+      });
+      print('ID Selecionado: $_enderecoSelecionadoId'); // E isto
     }
+  }
 
-    @override
-    void dispose() {
-      _nomeController.dispose();
-      _telefoneController.dispose();
-      _emailController.dispose();
-      super.dispose();
-    }
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _telefoneController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
 
-    @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -262,37 +313,37 @@
     );
   }
 
-    Widget _buildTextField(
-        String label, TextEditingController controller, String hintText) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.red,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+  Widget _buildTextField(
+      String label, TextEditingController controller, String hintText) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.red,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          width: double.infinity,
+          height: 50,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE0E0E0),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: hintText,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+              border: InputBorder.none,
             ),
           ),
-          const SizedBox(height: 5),
-          Container(
-            width: double.infinity,
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE0E0E0),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: hintText,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
+        ),
+      ],
+    );
   }
+}

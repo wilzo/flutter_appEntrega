@@ -35,63 +35,82 @@ bool validarEmail(String email) {
 
 
   void _cadastrarCliente() async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  // Remover espaços em branco dos campos
+  String nome = _nomeController.text.trim();
+  String telefone = _telefoneController.text.trim();
+  String email = _emailController.text.trim();
+  int? enderecoId = _enderecoSelecionadoId; // Usando a nova variável
+
+  // Verificar se algum dos campos está vazio ou nulo
+  if (nome.isEmpty || telefone.isEmpty || email.isEmpty || enderecoId == null) {
     setState(() {
-      _isLoading = true;
+      _isLoading = false;
     });
-
-    // Remover espaços em branco dos campos
-    String nome = _nomeController.text.trim();
-    String telefone = _telefoneController.text.trim();
-    String email = _emailController.text.trim();
-    int? enderecoId = _enderecoSelecionadoId; // Usando a nova variável
-
-    // Verificar se algum dos campos está vazio ou nulo
-    if (nome.isEmpty || telefone.isEmpty || email.isEmpty || enderecoId == null) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Todos os campos são obrigatórios')),
-      );
-      return;
-    }
-
-    if (!validarEmail(email)) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('E-mail inválido')),
-      );
-      return;
-    }
-
-    if (!validarTelefone(telefone)) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Telefone inválido')),
-      );
-      return;
-    }
-
-    try {
-      await _databaseHelper.createCliente(nome, telefone, email, enderecoId);
-
-      // Mostrar pop-up de sucesso
-      _showSuccessDialog();
-    } catch (e) {
-      print('Erro ao cadastrar cliente: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao cadastrar cliente: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Todos os campos são obrigatórios')),
+    );
+    return;
   }
+
+  if (!validarEmail(email)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('E-mail inválido')),
+    );
+    return;
+  }
+
+  if (!validarTelefone(telefone)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Telefone inválido')),
+    );
+    return;
+  }
+
+  try {
+    await _databaseHelper.createCliente(nome, telefone, email, enderecoId);
+
+    // Exibe o pop-up de sucesso
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sucesso'),
+          content: Text('Cliente cadastrado com sucesso!'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o pop-up
+                Navigator.pop(context, true); // Retorna à tela anterior e atualiza a lista
+              },
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    print('Erro ao cadastrar cliente: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao cadastrar cliente: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
+
+
     void _abrirListagemEnderecos() async {
     final resultado = await Navigator.push(
       context,
