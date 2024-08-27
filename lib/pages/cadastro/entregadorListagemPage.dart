@@ -39,7 +39,7 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Confirmação'),
-        content: Text('Deseja realmente deletar este entregador?'),
+        content: Text('Deseja realmente excluir este entregador?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

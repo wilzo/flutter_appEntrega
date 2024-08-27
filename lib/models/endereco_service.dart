@@ -94,21 +94,69 @@ class EnderecoService {
     }
   }
 
-  // Deletar um endereço
-  Future<void> deleteEndereco(int id) async {
-    if (_connection == null) {
-      await connect();
-    }
+ Future<bool> temClientesAssociados(int enderecoId) async {
+    await connect();
     try {
-      await _connection!.execute(
-        r'DELETE FROM endereco WHERE id = $1',
-        parameters: [id],
+      var result = await _connection!.execute(
+        'SELECT COUNT(*) FROM clientes WHERE endereco_id = @enderecoId',
+        parameters: [enderecoId],
       );
+
+      final count = result.isNotEmpty ? result.first[0] as int : 0;
+      return count > 0;
     } catch (e) {
-      print('Erro ao deletar endereço: $e');
+      print('Erro ao verificar clientes associados: $e');
+      return false;
     }
   }
 
+Future<bool> deleteEndereco(int id) async {
+  if (_connection == null) {
+    await connect();
+  }
+  try {
+    // Verifica se há clientes associados ao endereço
+    List<List<dynamic>> clienteCount = await _connection!.execute(
+      'SELECT COUNT(*) FROM clientes WHERE id = \$1',
+      parameters: [id],
+    );
+
+    int numClientes = clienteCount.first[0];
+
+    if (numClientes > 0) {
+      // Retorna `false` se houver clientes associados, para que a UI possa mostrar um pop-up
+      return false;
+    }
+
+    // Deleta o endereço se não houver clientes associados
+    await _deleteEnderecoEClientes(id);
+    return true;
+  } catch (e) {
+    print('Erro ao deletar endereço: $e');
+    return false;
+  }
+}
+
+// Método privado para deletar o endereço e os clientes associados
+Future<void> _deleteEnderecoEClientes(int id) async {
+  try {
+    // Deletar clientes associados ao endereço
+    await _connection!.execute(
+      'DELETE FROM clientes WHERE id = \$1',
+      parameters: [id],
+    );
+
+    // Deletar o endereço
+    await _connection!.execute(
+      'DELETE FROM endereco WHERE id = \$1',
+      parameters: [id],
+    );
+
+    print('Endereço e clientes associados deletados com sucesso.');
+  } catch (e) {
+    print('Erro ao deletar endereço e clientes associados: $e');
+  }
+}
   // Verificar se um endereço já existe
   Future<bool> verificarEnderecoExiste(String rua, String numero, String bairro, String cidade, String estado) async {
     if (_connection == null) {
@@ -162,4 +210,48 @@ class EnderecoService {
       return [];
     }
   }
+  Future<String?> getLinkEnderecoById(int id) async {
+    if (_connection == null) {
+      await connect();
+    }
+    
+    try {
+      // Consultar o link do endereço com base no ID
+      List<List<dynamic>> results = await _connection!.execute(
+        'SELECT link FROM endereco WHERE id = @id',
+        parameters: [
+          id,
+        ],
+      );
+
+      // Retornar o link se encontrado, caso contrário, retornar null
+      if (results.isNotEmpty) {
+        return results[0][0] as String;
+      }
+    } catch (e) {
+      print('Erro ao obter o link do endereço por ID: $e');
+    }
+
+    return null; // Retorna null se não encontrou o endereço
+  }
+
+  Future<String?> pegarLink( id) async {
+  // Verifica se a conexão está estabelecida, senão conecta
+  if (_connection == null) {
+    await connect(); // Estabelece a conexão se ainda não estiver conectada
+  }
+
+  // Executa a consulta SQL para obter o link baseado no id_endereco fornecido
+  List<List<dynamic>> results = await _connection!.execute(
+    r'SELECT link FROM endereco WHERE id = @id_endereco',
+    parameters: [id],
+  );
+
+  // Verifica se a consulta retornou resultados e retorna o link ou null
+  if (results.isNotEmpty) {
+    return results[0][0] as String?;
+  }
+  return null; // Retorna null se não houver resultados
+}
+
 }

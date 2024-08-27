@@ -1,116 +1,157 @@
-import 'package:flutter/material.dart';
-import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
-import 'package:flutter_projeto/models/databaseHelper.dart';
-import 'package:flutter_projeto/models/cliente_service.dart';
+  import 'package:flutter/material.dart';
+  import 'enderecoListagemPage.dart'; // Importe a página de listagem de endereços
+  import 'package:flutter_projeto/models/databaseHelper.dart';
+  import 'package:flutter_projeto/models/cliente_service.dart';
 
-class EditClientePage extends StatefulWidget {
-  final int clienteId;
+  class EditClientePage extends StatefulWidget {
+    final int clienteId;
 
-  EditClientePage({required this.clienteId});
+    EditClientePage({required this.clienteId});
 
-  @override
-  _EditClientePageState createState() => _EditClientePageState();
-}
-
-class _EditClientePageState extends State<EditClientePage> {
-  final ClienteService _clienteService = ClienteService();
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-  late TextEditingController _nomeController;
-  late TextEditingController _telefoneController;
-  late TextEditingController _emailController;
-  int? _enderecoSelecionado;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nomeController = TextEditingController();
-    _telefoneController = TextEditingController();
-    _emailController = TextEditingController();
-    _carregarDados();
+    @override
+    _EditClientePageState createState() => _EditClientePageState();
   }
 
-  Future<void> _carregarDados() async {
-    try {
-      await _databaseHelper.connect();
-      final cliente =
-          await _clienteService.listarClientePorId(widget.clienteId);
+  class _EditClientePageState extends State<EditClientePage> {
+    final ClienteService _clienteService = ClienteService();
+    final DatabaseHelper _databaseHelper = DatabaseHelper();
+    late TextEditingController _nomeController;
+    late TextEditingController _telefoneController;
+    late TextEditingController _emailController;
+    int? _enderecoSelecionado;
+    
+    int? _enderecoSelecionadoId;
+    int? _enderecoSelecionadoIdArmazenado; // Nova variável para armazenar o ID
+    String? _enderecoSelecionadoDescricao; 
+    bool _isLoading = false;
 
-      if (cliente != null) {
-        setState(() {
-          _nomeController.text = cliente['nome'] ?? '';
-          _telefoneController.text = cliente['telefone'] ?? '';
-          _emailController.text = cliente['email'] ?? '';
-          _enderecoSelecionado = cliente['endereco_id'];
-        });
-      } else {
-        print('Cliente não encontrado');
+    @override
+    void initState() {
+      super.initState();
+      _nomeController = TextEditingController();
+      _telefoneController = TextEditingController();
+      _emailController = TextEditingController();
+      _carregarDados();
+    }
+
+    Future<void> _carregarDados() async {
+      try {
+        await _databaseHelper.connect();
+        final cliente =
+            await _clienteService.listarClientePorId(widget.clienteId);
+
+        if (cliente != null) {
+          setState(() {
+            _nomeController.text = cliente['nome'] ?? '';
+            _telefoneController.text = cliente['telefone'] ?? '';
+            _emailController.text = cliente['email'] ?? '';
+            _enderecoSelecionadoId = cliente['endereco_id'];
+          });
+        } else {
+          print('Cliente não encontrado');
+        }
+      } catch (e) {
+        print('Erro ao carregar dados: $e');
+      } finally {
+        await _databaseHelper.closeConnection();
       }
-    } catch (e) {
-      print('Erro ao carregar dados: $e');
-    } finally {
-      await _databaseHelper.closeConnection();
     }
-  }
 
-  Future<void> _atualizarCliente() async {
-    setState(() {
-      _isLoading = true;
-    });
+    Future<void> _atualizarCliente() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      await _databaseHelper.connect();
-      await _clienteService.updateCliente(
-        widget.clienteId,
-        _nomeController.text,
-        _telefoneController.text,
-        _emailController.text,
-        _enderecoSelecionado,
-      );
-      Navigator.pop(context,
-          true); // Envia um valor de retorno para indicar que a lista deve ser atualizada
-    } catch (e) {
-      print('Erro ao atualizar cliente: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar cliente: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-      await _databaseHelper.closeConnection();
-    }
-  }
-
-  void _abrirListagemEnderecos() async {
-    final resultado = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
+  try {
+    // Atualiza o cliente no banco de dados
+    await _clienteService.updateCliente(
+      widget.clienteId,
+      _nomeController.text,
+      _telefoneController.text,
+      _emailController.text,
+      _enderecoSelecionadoId,
     );
 
-    if (resultado != null && resultado is int) {
-      setState(() {
-        _enderecoSelecionado = resultado;
-      });
+    // Exibindo o pop-up de sucesso
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sucesso'),
+          content: const Text('Cliente atualizado com sucesso!'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o pop-up
+                Navigator.of(context).pop(); // Volta para a tela anterior
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    // Exibindo o pop-up de erro
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Erro'),
+          content: Text('Ocorreu um erro ao atualizar o cliente: $e'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o pop-up
+                setState(() {
+                  _isLoading = false;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+    void _abrirListagemEnderecos() async {
+      final resultado = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => EnderecoListagemPage()),
+      );
+
+      if (resultado != null && resultado is Map<String, dynamic>) {
+        print('Resultado: $resultado'); // Adicione isto
+        setState(() {
+          _enderecoSelecionadoDescricao =
+              '${resultado['rua']}, ${resultado['numero']}';
+          _enderecoSelecionadoId = resultado['id'];
+        });
+        print('ID Selecionado: $_enderecoSelecionadoId'); // E isto
+      }
     }
-  }
 
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _telefoneController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
+    @override
+    void dispose() {
+      _nomeController.dispose();
+      _telefoneController.dispose();
+      _emailController.dispose();
+      super.dispose();
+    }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Editar Cliente'),
         backgroundColor: const Color.fromARGB(255, 245, 16, 0),
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           color: Colors.white,
           fontSize: 22,
           fontWeight: FontWeight.bold,
@@ -166,25 +207,22 @@ class _EditClientePageState extends State<EditClientePage> {
                 width: double.infinity,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Color(0xFFE0E0E0),
+                  color: const Color(0xFFE0E0E0),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   onPressed: _abrirListagemEnderecos,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFE0E0E0),
+                    backgroundColor: const Color(0xFFE0E0E0),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     elevation: 0,
                   ),
-                  icon: Icon(Icons.location_on, color: Colors.black),
-                  label: Text(
-                    _enderecoSelecionado == null
-                        ? 'Selecionar endereço do cliente'
-                        : 'Endereço ID: $_enderecoSelecionado',
-                    style: TextStyle(
+                  child: Text(
+                    _enderecoSelecionadoDescricao ?? 'Selecionar Endereço',
+                    style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
                     ),
@@ -224,37 +262,37 @@ class _EditClientePageState extends State<EditClientePage> {
     );
   }
 
-  Widget _buildTextField(
-      String label, TextEditingController controller, String hintText) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.red,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 5),
-        Container(
-          width: double.infinity,
-          height: 50,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE0E0E0),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: hintText,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-              border: InputBorder.none,
+    Widget _buildTextField(
+        String label, TextEditingController controller, String hintText) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-      ],
-    );
+          const SizedBox(height: 5),
+          Container(
+            width: double.infinity,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0E0E0),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: hintText,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
   }
-}

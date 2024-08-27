@@ -20,25 +20,22 @@ class EntregaService {
       await connect();
     }
     await _connection!.execute('''
-      CREATE TABLE IF NOT EXISTS entregas (
-        id_Entrega SERIAL PRIMARY KEY,
-        data DATE NOT NULL,
-        hora_Entrega VARCHAR(100) NOT NULL,
-        id_Entregador INTEGER REFERENCES entregador(id_Entregador) ON DELETE SET NULL,
-        id_Cliente INTEGER REFERENCES clientes(id) ON DELETE SET NULL,
-        id_Itens INTEGER REFERENCES itens_entrega(id_Itens) ON DELETE SET NULL,
-        status VARCHAR(50) NOT NULL DEFAULT 'futura'
-      )
+     CREATE TABLE IF NOT EXISTS entregas (
+    id_Entrega SERIAL PRIMARY KEY,
+    data DATE NOT NULL,
+    hora_Entrega VARCHAR(100) NOT NULL,
+    id_Entregador INTEGER REFERENCES entregador(id_Entregador) ON DELETE CASCADE,
+    id_Cliente INTEGER REFERENCES clientes(id) ON DELETE CASCADE,
+    id_Itens INTEGER REFERENCES itens_entrega(id_Itens) ON DELETE SET NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'futura'
+);
+);
+
     ''');
   }
 
-  Future<void> createEntrega(
-    DateTime dataEntrega,
-    String horaEntrega,
-    int idEntregador,
-    int idCliente,
-    int idItens
-  ) async {
+  Future<void> createEntrega(DateTime dataEntrega, String horaEntrega,
+      int idEntregador, int idCliente, int idItens) async {
     if (_connection == null) {
       await connect();
     }
@@ -63,7 +60,8 @@ class EntregaService {
     );
   }
 
-  Future<List<Map<String, dynamic>>> listarEntregas([String searchQuery = '']) async {
+  Future<List<Map<String, dynamic>>> listarEntregas(
+      [String searchQuery = '']) async {
     if (_connection == null) {
       await connect();
     }
@@ -103,6 +101,48 @@ class EntregaService {
     return entregas;
   }
 
+  Future<String?> getLinkEnderecoByIdEntrega(int idEntrega) async {
+    if (_connection == null) {
+      await connect();
+    }
+
+    try {
+      // Buscar o id_cliente na tabela de entregas
+      List<List<dynamic>> entregaResult = await _connection!.execute(
+        'SELECT id_cliente FROM entregas WHERE id_Entrega = \$1',
+        parameters: [idEntrega],
+      );
+
+      if (entregaResult.isNotEmpty) {
+        int idCliente = entregaResult[0][0];
+
+        // Buscar o id_endereco na tabela de clientes usando o id_cliente
+        List<List<dynamic>> clienteResult = await _connection!.execute(
+          'SELECT endereco_id FROM clientes WHERE id = \$1',
+          parameters: [idCliente],
+        );
+
+        if (clienteResult.isNotEmpty) {
+          int idEndereco = clienteResult[0][0];
+
+          // Buscar o link na tabela de endereços usando o id_endereco
+          List<List<dynamic>> enderecoResult = await _connection!.execute(
+            'SELECT link FROM endereco WHERE id = \$1',
+            parameters: [idEndereco],
+          );
+
+          if (enderecoResult.isNotEmpty) {
+            return enderecoResult[0][0] as String?;
+          }
+        }
+      }
+    } catch (e) {
+      print('Erro ao obter o link do endereço pela entrega: $e');
+    }
+
+    return null; // Retorna null se o link não for encontrado
+  }
+
   Future<void> deleteEntrega(int idEntrega) async {
     if (_connection == null) {
       await connect();
@@ -121,14 +161,13 @@ class EntregaService {
   }
 
   Future<void> updateEntrega(
-    int idEntrega,
-    DateTime dataEntrega,
-    String horaEntrega,
-    int idEntregador,
-    int idCliente,
-    int idItens,
-    String status
-  ) async {
+      int idEntrega,
+      DateTime dataEntrega,
+      String horaEntrega,
+      int idEntregador,
+      int idCliente,
+      int idItens,
+      String status) async {
     if (_connection == null) {
       await connect();
     }

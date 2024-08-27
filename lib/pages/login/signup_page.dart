@@ -14,8 +14,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-    final UserService _userService = UserService();
-
+  final UserService _userService = UserService();
 
   @override
   void initState() {
@@ -45,7 +44,25 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       await _userService.createUser(username, email, password);
-      Navigator.pop(context); // Navegue para a página de login ou mostre uma mensagem de sucesso
+      // Exibir o pop-up de sucesso
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Cadastro realizado'),
+            content: Text('Seu cadastro foi realizado com sucesso!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fecha o pop-up
+                  Navigator.of(context).pop(); // Navega de volta para a página de login
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     } catch (e) {
       print('Erro ao criar usuário: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,7 +81,6 @@ class _SignupPageState extends State<SignupPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
@@ -75,7 +91,6 @@ class _SignupPageState extends State<SignupPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      
                       const Text(
                         'ENTREGA JA',
                         style: TextStyle(
@@ -95,7 +110,6 @@ class _SignupPageState extends State<SignupPage> {
                     ],
                   ),
                   const SizedBox(width: 20),
-                  
                 ],
               ),
               const SizedBox(height: 20),

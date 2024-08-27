@@ -29,16 +29,17 @@ class ClienteService {
   ''');
   }
 
-  Future<void> createCliente(String nome, String telefone, String email, int? enderecoId) async {
-    if (_connection == null) {
-      await connect();
-    }
+  Future<bool> createCliente(String nome, String telefone, String email, int? enderecoId) async {
+  if (_connection == null) {
+    await connect();
+  }
 
-    String query = '''
-    INSERT INTO clientes (nome, telefone, email, endereco_id)
-    VALUES (\$1, \$2, \$3, \$4)
+  String query = '''
+  INSERT INTO clientes (nome, telefone, email, endereco_id)
+  VALUES (\$1, \$2, \$3, \$4)
   ''';
 
+  try {
     await _connection!.execute(
       query,
       parameters: [
@@ -48,7 +49,14 @@ class ClienteService {
         enderecoId,
       ],
     );
+    return true; // Retorna true se a inserção for bem-sucedida
+  } catch (e) {
+    print('Erro ao inserir cliente: $e');
+    return false; // Retorna false se ocorrer um erro
   }
+}
+
+
 Future<List<Map<String, dynamic>>> listarClientes(String searchQuery) async {
   if (_connection == null) {
     await connect();
@@ -108,7 +116,7 @@ Future<void> deleteCliente(int id) async {
     }
   }
 
-  Future<void> updateCliente(int id, String nome, String telefone, String email, int? enderecoId) async {
+   Future<void> updateCliente(int id, String nome, String telefone, String email, int? enderecoId) async {
     if (_connection == null) {
       await connect();
     }
@@ -130,6 +138,7 @@ Future<void> deleteCliente(int id) async {
       );
     } catch (e) {
       print('Erro ao atualizar cliente: $e');
+      rethrow; // Re-lança a exceção para ser capturada no método chamador
     }
   }
 

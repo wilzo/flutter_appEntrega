@@ -34,12 +34,12 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     }
   }
 
-  Future<void> _deletarCliente(int id) async {
+  Future<void> _deletarCliente(int id, String nome) async {
     bool confirmar = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Confirmação'),
-        content: Text('Deseja realmente deletar este cliente?'),
+        content: Text('Deseja realmente excluir o cliente $nome?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -47,7 +47,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Deletar'),
+            child: Text('excluir'),
           ),
         ],
       ),
@@ -148,6 +148,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                     itemBuilder: (context, index) {
                       final cliente = _clientes[index];
                       final id = cliente['id'];
+                      final nome = cliente['nome'];
 
                       return Card(
                         elevation: 4,
@@ -216,7 +217,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                                     ),
                                     IconButton(
                                       icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deletarCliente(id),
+                                      onPressed: () => _deletarCliente(id, nome),
                                     ),
                                   ],
                                 )

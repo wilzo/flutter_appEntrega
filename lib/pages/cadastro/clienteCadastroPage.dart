@@ -18,6 +18,21 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
   String? _enderecoSelecionadoDescricao; 
 
   bool _isLoading = false;
+bool validarEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    return emailRegex.hasMatch(email);
+  }
+
+  // Função para validar telefone
+  bool validarTelefone(String telefone) {
+    final telefoneRegex = RegExp(
+      r'^\+?[0-9]{10,15}$', // Ajuste conforme o formato esperado
+    );
+    return telefoneRegex.hasMatch(telefone);
+  }
+
 
   void _cadastrarCliente() async {
     setState(() {
@@ -41,6 +56,26 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
       return;
     }
 
+    if (!validarEmail(email)) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('E-mail inválido')),
+      );
+      return;
+    }
+
+    if (!validarTelefone(telefone)) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Telefone inválido')),
+      );
+      return;
+    }
+
     try {
       await _databaseHelper.createCliente(nome, telefone, email, enderecoId);
 
@@ -57,7 +92,6 @@ class _ClienteCadastroPageState extends State<ClienteCadastroPage> {
       });
     }
   }
-
     void _abrirListagemEnderecos() async {
     final resultado = await Navigator.push(
       context,

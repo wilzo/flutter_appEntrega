@@ -35,38 +35,58 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     }
   }
 
-  Future<void> _deletarEndereco(int id) async {
-    bool confirmar = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Confirmação'),
-        content: Text('Deseja realmente deletar este endereço?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Deletar'),
-          ),
-        ],
-      ),
-    );
+ Future<void> _deletarEndereco(int id) async {
+  bool confirmar = await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Confirmação'),
+      content: Text('Deseja realmente excluir este endereço e seus clientes associados?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text('Excluir'),
+        ),
+      ],
+    ),
+  );
 
-    if (confirmar == true) {
-      try {
-        await _databaseHelper.connect();
-        await _enderecoService.deleteEndereco(id);
+  if (confirmar == true) {
+    try {
+      bool foiDeletado = await _enderecoService.deleteEndereco(id);
+
+      if (foiDeletado) {
+        // Exibe uma notificação de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Endereço e clientes associados deletados com sucesso.'),
+            backgroundColor: Colors.green,
+          ),
+        );
         await _listarEnderecos(); // Atualiza a lista após deletar
-      } catch (e) {
-        print('Erro ao deletar endereço: $e');
-      } finally {
-        await _databaseHelper.closeConnection();
+      } else {
+        // Exibe uma notificação avisando que há clientes associados
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Não é possível excluir o endereço, pois há clientes associados.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+    } catch (e) {
+      print('Erro ao deletar endereço: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao tentar deletar o endereço.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
-
+}
   Future<void> _editarEndereco(int id) async {
     final result = await Navigator.push(
       context,
@@ -193,7 +213,7 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                       final id = endereco['id'];
                       final rua = endereco['rua'];
                       final numero = endereco['numero'];
-                      final link = endereco['link']; // Adiciona o campo link
+                      final link = endereco['link']; 
 
                       return Card(
                         elevation: 4,

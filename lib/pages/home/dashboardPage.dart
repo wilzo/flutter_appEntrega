@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_projeto/models/endereco_service.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_projeto/models/databaseHelper.dart';
 import 'package:flutter_projeto/models/entrega_service.dart';
@@ -8,7 +9,7 @@ import 'package:flutter_projeto/pages/cadastro/entregaCadastroPage.dart';
 import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
 import 'package:url_launcher/url_launcher.dart'; // Adicione isso no início do seu arquivo
-
+import 'package:flutter_projeto/pages/cadastro/enderecoListagemPage.dart';
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -18,6 +19,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   final EntregaService _entregaService = EntregaService();
+  final EnderecoService _enderecoService = EnderecoService();
 
   bool _showClienteOptions = false;
   bool _showEntregadorOptions = false;
@@ -185,103 +187,108 @@ Future<void> _mostrarDialogo(String link) async {
   );
 }
 
+ Future<String?> _getEnderecoLink(int idEndereco) async {
+    return await _entregaService.getLinkEnderecoByIdEntrega(idEndereco);
+  }
 Widget _buildEntregaCard(Map<String, dynamic> entrega) {
-  String? urlEndereco = entrega['link'] as String?; // Certifique-se de que 'link' é o nome correto
-
-  return Card(
-    margin: EdgeInsets.symmetric(vertical: 5),
-    child: Padding(
-      padding: EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Entrega #${entrega['id_Entrega']}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+    return FutureBuilder<String?>(
+      future: _getEnderecoLink(entrega['id_Entrega']),
+      builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
+        String? urlEndereco = snapshot.data;
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 5),
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Entrega #${entrega['id_Entrega']}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  entrega['descricao'],
+                  style: TextStyle(fontSize: 12),
+                ),
+                SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 14),
+                    SizedBox(width: 5),
+                    Text(
+                      _formatarData(entrega['data']),
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(Icons.access_time, size: 14),
+                    SizedBox(width: 5),
+                    Text(
+                      _formatarHora(entrega['hora_Entrega']),
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(Icons.person, size: 14),
+                    SizedBox(width: 5),
+                    Text(
+                      entrega['entregador_nome'] ?? 'N/A',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(Icons.person_outline, size: 14),
+                    SizedBox(width: 5),
+                    Text(
+                      entrega['cliente_nome'] ?? 'N/A',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                if (entrega['status'] == 'pendente' || entrega['status'] == 'futura')
+                  ElevatedButton(
+                    onPressed: () => _concluirEntrega(entrega['id_Entrega']),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
+                    child: Text('Entrega Concluída', style: TextStyle(fontSize: 12)),
+                  ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.map, size: 24, color: Colors.blue),
+                    onPressed: () {
+                      if (urlEndereco != null && urlEndereco.isNotEmpty) {
+                        _mostrarDialogo(urlEndereco);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Endereço não encontrado ou inválido.')),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 5),
-          Text(
-            entrega['descricao'],
-            style: TextStyle(fontSize: 12),
-          ),
-          SizedBox(height: 5),
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 14),
-              SizedBox(width: 5),
-              Text(
-                _formatarData(entrega['data']),
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-          SizedBox(height: 5),
-          Row(
-            children: [
-              Icon(Icons.access_time, size: 14),
-              SizedBox(width: 5),
-              Text(
-                _formatarHora(entrega['hora_Entrega']),
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-          SizedBox(height: 5),
-          Row(
-            children: [
-              Icon(Icons.person, size: 14),
-              SizedBox(width: 5),
-              Text(
-                entrega['entregador_nome'] ?? 'N/A',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-          SizedBox(height: 5),
-          Row(
-            children: [
-              Icon(Icons.person_outline, size: 14),
-              SizedBox(width: 5),
-              Text(
-                entrega['cliente_nome'] ?? 'N/A',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-          SizedBox(height: 5),
-          if (entrega['status'] == 'pendente' || entrega['status'] == 'futura')
-            ElevatedButton(
-              onPressed: () => _concluirEntrega(entrega['id_Entrega']),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
-              child: Text('Entrega Concluída', style: TextStyle(fontSize: 12)),
-            ),
-          // Botão de localização
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              icon: Icon(Icons.map, size: 24, color: Colors.blue),
-              onPressed: () {
-                if (urlEndereco != null && urlEndereco.isNotEmpty) {
-                  _mostrarDialogo(urlEndereco);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('URL do endereço não disponível')),
-                  );
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
+        );
+      },
+    );
+  }
   Widget _buildEntregaColumn(String title, List<Map<String, dynamic>> entregas, Color color) {
   return Container(
     width: 400, // Ajuste a largura conforme necessário
@@ -301,14 +308,15 @@ Widget _buildEntregaCard(Map<String, dynamic> entrega) {
         SizedBox(height: 10),
         Expanded(
           child: SingleChildScrollView(
-            child: Column(
-              children: entregas
-                  .where((entrega) => entrega['cliente_nome']
-                      .toLowerCase()
-                      .contains(_searchQuery.toLowerCase()))
-                  .map((entrega) => _buildEntregaCard(entrega))
-                  .toList(),
-            ),
+           child: Column(
+  children: entregas
+      .where((entrega) => (entrega['cliente_nome'] ?? '')
+          .toLowerCase()
+          .contains(_searchQuery.toLowerCase()))
+      .map((entrega) => _buildEntregaCard(entrega))
+      .toList(),
+),
+
           ),
         ),
       ],

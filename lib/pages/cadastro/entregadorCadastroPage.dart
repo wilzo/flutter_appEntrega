@@ -23,6 +23,12 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
 
   final EntregadorService _entregadorService = EntregadorService();
 
+bool validarTelefone(String telefone) {
+    final telefoneRegex = RegExp(
+      r'^\+?[0-9]{10,15}$', // Ajuste conforme o formato esperado
+    );
+    return telefoneRegex.hasMatch(telefone);
+  }
   void _cadastrarEntregador() async {
     setState(() {
       _isLoading = true;
@@ -42,6 +48,17 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
       );
       return;
     }
+
+    if (!validarTelefone(telefone)) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Telefone inválido')),
+      );
+      return;
+    }
+
 
     try {
       await _entregadorService.createEntregadorTable();

@@ -80,7 +80,7 @@ class EntregadorService {
 
     return entregadores;
   }
-
+  
   Future<void> deleteEntregador(int id) async {
     if (_connection == null) {
       await connect();
