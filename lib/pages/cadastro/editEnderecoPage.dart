@@ -72,7 +72,24 @@ class _EditEnderecoPageState extends State<EditEnderecoPage> {
         _cidadeController.text,
         _estadoController.text,
       );
-      Navigator.pop(context, true);
+
+      // Exibe o pop-up após a atualização bem-sucedida
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Endereço Atualizado'),
+          content: Text('O endereço foi atualizado com sucesso!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop(true);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
       print('Erro ao atualizar endereço: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -123,6 +140,7 @@ class _EditEnderecoPageState extends State<EditEnderecoPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Editar Endereço'),
+        backgroundColor: Color.fromARGB(255, 255, 20, 20),
         actions: [
           IconButton(
             icon: Icon(Icons.delete),
@@ -131,37 +149,127 @@ class _EditEnderecoPageState extends State<EditEnderecoPage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: _isLoading
             ? Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  TextField(
-                    controller: _ruaController,
-                    decoration: InputDecoration(labelText: 'Rua'),
-                  ),
-                  TextField(
-                    controller: _numeroController,
-                    decoration: InputDecoration(labelText: 'Número'),
-                  ),
-                  TextField(
-                    controller: _bairroController,
-                    decoration: InputDecoration(labelText: 'Bairro'),
-                  ),
-                  TextField(
-                    controller: _cidadeController,
-                    decoration: InputDecoration(labelText: 'Cidade'),
-                  ),
-                  TextField(
-                    controller: _estadoController,
-                    decoration: InputDecoration(labelText: 'Estado'),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _atualizarEndereco,
-                    child: Text('Atualizar Endereço'),
-                  ),
-                ],
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rua',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: _ruaController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Número',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: _numeroController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Bairro',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: _bairroController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Cidade',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: _cidadeController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Estado',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: _estadoController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _atualizarEndereco,
+                        child: Text(
+                          'Atualizar Endereço',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 255, 20, 20),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
       ),
     );

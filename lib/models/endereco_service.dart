@@ -39,12 +39,12 @@ class EnderecoService {
   // Criar um novo endereço e armazenar o link gerado
   Future<void> createEndereco(String rua, String numero, String bairro, String cidade, String estado) async {
     if (_connection == null) {
-      await connect();
+      await connect(); //CONECTA COM O BANCO
     }
     try {
-      String link = 'https://maps.google.com/?q=${rua.replaceAll(' ', '+')},${bairro.replaceAll(' ', '+')},${numero.replaceAll(' ', '+')}';
-      await _connection!.execute(
-        r'INSERT INTO endereco (rua, numero, bairro, cidade, estado, link) VALUES ($1, $2, $3, $4, $5, $6)',
+      String link = 'https://maps.google.com/?q=${rua.replaceAll(' ', '+')},${bairro.replaceAll(' ', '+')},${numero.replaceAll(' ', '+')}'; //CRIA A STRING LINK, COM BASE NOS DADOS PASSADOS
+      await     _connection!.execute(
+        r'INSERT INTO endereco (rua, numero, bairro, cidade, estado, link) VALUES ($1, $2, $3, $4, $5, $6)', //FAZ O INSERT NO BANCO
         parameters: [rua, numero, bairro, cidade, estado, link],
       );
     } catch (e) {

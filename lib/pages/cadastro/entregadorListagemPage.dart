@@ -34,12 +34,12 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
     }
   }
 
-  Future<void> _deletarEntregador(int id) async {
+  Future<void> _deletarEntregador(int id, String nome) async {
     bool confirmar = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Confirmação'),
-        content: Text('Deseja realmente excluir este entregador?'),
+        content: Text('Deseja realmente excluir o entregador $nome ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -148,6 +148,7 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
                     itemBuilder: (context, index) {
                       final entregador = _entregadores[index];
                       final id = entregador['id_Entregador'];
+                      final nome = entregador['nome'];
 
                       return Card(
                         elevation: 4,
@@ -213,7 +214,7 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
                                     ),
                                     IconButton(
                                       icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deletarEntregador(id),
+                                      onPressed: () => _deletarEntregador(id, nome),
                                     ),
                                   ],
                                 )

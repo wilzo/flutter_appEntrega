@@ -161,42 +161,42 @@ class EntregaService {
   }
 
   Future<void> updateEntrega(
-      int idEntrega,
-      DateTime dataEntrega,
-      String horaEntrega,
-      int idEntregador,
-      int idCliente,
-      int idItens,
-      String status) async {
-    if (_connection == null) {
-      await connect();
-    }
-
-    String formattedData = DateFormat('yyyy-MM-dd').format(dataEntrega);
-    String formattedHora = horaEntrega;
-
-    try {
-      await _connection!.execute(
-        '''
-        UPDATE entregas
-        SET data = \$1, hora_Entrega = \$2, id_Entregador = \$3, id_Cliente = \$4, id_Itens = \$5, status = \$6
-        WHERE id_Entrega = \$7
-        ''',
-        parameters: [
-          formattedData,
-          formattedHora,
-          idEntregador,
-          idCliente,
-          idItens,
-          status,
-          idEntrega,
-        ],
-      );
-    } catch (e) {
-      print('Erro ao atualizar entrega: $e');
-    }
+  int idEntrega,
+  DateTime dataEntrega,
+  String horaEntrega,
+  int idEntregador,
+  int idCliente,
+  int idItens,
+  String status,
+) async {
+  if (_connection == null) {
+    await connect();
   }
 
+  String formattedData = DateFormat('yyyy-MM-dd').format(dataEntrega);
+  String formattedHora = horaEntrega;
+
+  try {
+    await _connection!.execute(
+      '''
+      UPDATE entregas
+      SET data = \$1, hora_Entrega = \$2, id_Entregador = \$3, id_Cliente = \$4, id_Itens = \$5, status = \$6
+      WHERE id_Entrega = \$7
+      ''',
+      parameters: [
+        formattedData,
+        formattedHora,
+        idEntregador,
+        idCliente,
+        idItens,
+        status,
+        idEntrega,
+      ],
+    );
+  } catch (e) {
+    print('Erro ao atualizar entrega: $e');
+  }
+}
   Future<Map<String, dynamic>?> listarEntregaPorId(int idEntrega) async {
     if (_connection == null) {
       await connect();
@@ -273,5 +273,45 @@ class EntregaService {
   // Novo método para pegar todas as entregas
   Future<List<Map<String, dynamic>>> getEntregas() async {
     return await listarEntregas();
+
+
+  } Future<void> atualizarEntrega(
+    int idEntrega,
+    DateTime data,
+    String hora, // Hora como String no formato HH:mm
+    String descricao,
+    int enderecoId,
+  ) async {
+    if (_connection == null) {
+      await _connect();
+    }
+
+    String query = '''
+      UPDATE entrega
+      SET data = \$1,
+          hora = \$2,
+          descricao = \$3,
+          endereco_id = \$4
+      WHERE id_entrega = \$5
+    ''';
+
+    await _connection!.execute(
+      query,
+      parameters: [
+        data.toIso8601String().split('T').first, // Formato DATE
+        hora, // Hora como String no formato HH:mm
+        descricao,
+        enderecoId,
+        idEntrega,
+      ],
+    );
+
+    print('Entrega atualizada com sucesso!');
+  }
+
+  Future<void> _connect() async {
+
   }
 }
+
+

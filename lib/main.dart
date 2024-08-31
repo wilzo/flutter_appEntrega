@@ -5,6 +5,8 @@ import 'package:flutter_projeto/models/user_services.dart';
 import 'package:flutter_projeto/pages/login/login_page.dart'; // Adicione os imports necessários para o seu app
 import 'package:flutter_projeto/pages/main/main_page.dart';
 import 'package:flutter_projeto/models/itens_service.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 
 
 void main() async {
@@ -42,10 +44,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+       locale: Locale('pt', 'BR'), // Define o idioma e o país
+      supportedLocales: [
+        const Locale('en', 'US'), // Inglês
+        const Locale('pt', 'BR'), // Português
+      ],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
       home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(), 

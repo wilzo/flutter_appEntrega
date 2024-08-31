@@ -59,10 +59,10 @@ class ClienteService {
 
 Future<List<Map<String, dynamic>>> listarClientes(String searchQuery) async {
   if (_connection == null) {
-    await connect();
+    await connect(); //VERIFICA CONEXAO COM O BANCO 
   }
-
-  String sql = '''
+// STRING SQL PARA BUSCAR OS DADOS DO CLIENTE
+  String sql = ''' 
     SELECT c.id, c.nome, c.telefone, c.email, e.rua, e.numero, e.bairro, e.cidade, e.estado
     FROM clientes c
     LEFT JOIN endereco e ON c.endereco_id = e.id
@@ -73,11 +73,11 @@ Future<List<Map<String, dynamic>>> listarClientes(String searchQuery) async {
        OR e.bairro LIKE \$1
     ORDER BY c.nome ASC
   ''';
-
+// APOS BUSCAR OS DADOS ELE VAI COMEÇAR A MAPEAR ESSES DADOS 
   try {
     final results = await _connection!.execute(
       sql,
-      parameters: ['%$searchQuery%'],  // Usando a lista de parâmetros
+      parameters: ['%$searchQuery%'],  //Execução: A consulta é executada no banco de dados com o método execute, onde o searchQuery é passado como parâmetro. O parâmetro é colocado dentro de % para permitir a busca parcial.
     );
 
     return results.map((row) {
@@ -92,7 +92,7 @@ Future<List<Map<String, dynamic>>> listarClientes(String searchQuery) async {
         'cidade': row[7],
         'estado': row[8],
       };
-    }).toList();
+    }).toList();  // APÓS MAPEAR A LISTA ELE A RETORNA PARA UTILIZAR
   } catch (e) {
     print('Erro ao listar clientes: $e');
     return [];
@@ -103,8 +103,6 @@ Future<void> deleteCliente(int id) async {
     if (_connection == null) {
       await connect();
     }
-
-    print('Tentando deletar cliente com ID: $id');
 
     try {
       await _connection!.execute(
@@ -118,11 +116,11 @@ Future<void> deleteCliente(int id) async {
 
    Future<void> updateCliente(int id, String nome, String telefone, String email, int? enderecoId) async {
     if (_connection == null) {
-      await connect();
+      await connect(); //CONECTA NO BANCO
     }
 
     try {
-      await _connection!.execute(
+      await _connection!.execute( //STRING SQL PARA DAR UPDATE NOS DADOS, ESSE TERMO '\$1' É UTILIZADO PARA MOSTRAR CADA PARAMETRO COM O EXECUTE NO DART. 
         '''
         UPDATE clientes
         SET nome = \$1, telefone = \$2, email = \$3, endereco_id = \$4

@@ -10,6 +10,8 @@ import 'package:flutter_projeto/pages/cadastro/clienteListagemPage.dart';
 import 'package:flutter_projeto/pages/cadastro/entregadorListagemPage.dart';
 import 'package:url_launcher/url_launcher.dart'; // Adicione isso no início do seu arquivo
 import 'package:flutter_projeto/pages/cadastro/enderecoListagemPage.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_projeto/pages/cadastro/EditEntregaPage.dart';
 
 class DashboardPage extends StatefulWidget {
   @override
@@ -28,6 +30,7 @@ class _DashboardPageState extends State<DashboardPage> {
   List<Map<String, dynamic>> _entregasFuturas = [];
   List<Map<String, dynamic>> _entregasConcluidas = [];
   String _searchQuery = '';
+  final _horaController = TextEditingController();
 
   @override
   void initState() {
@@ -41,12 +44,29 @@ class _DashboardPageState extends State<DashboardPage> {
     await _loadEntregas();
   }
 
+  Future<void> _editarEntrega(int id) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditEntregaPage(entregaId: id),
+      ),
+    );
+
+    if (result == true) {
+      _loadEntregas(); // Atualiza a lista após editar
+    }
+  }
+
   Future<void> _loadEntregas() async {
     List<Map<String, dynamic>> entregas = await _entregaService.getEntregas();
     setState(() {
-      _entregasPendentes = entregas.where((entrega) => entrega['status'] == 'pendente').toList();
-      _entregasFuturas = entregas.where((entrega) => entrega['status'] == 'futura').toList();
-      _entregasConcluidas = entregas.where((entrega) => entrega['status'] == 'concluída').toList();
+      _entregasPendentes =
+          entregas.where((entrega) => entrega['status'] == 'pendente').toList();
+      _entregasFuturas =
+          entregas.where((entrega) => entrega['status'] == 'futura').toList();
+      _entregasConcluidas = entregas
+          .where((entrega) => entrega['status'] == 'concluída')
+          .toList();
     });
   }
 
@@ -65,11 +85,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
   String _formatarData(dynamic data) {
     if (data is DateTime) {
-      return DateFormat('dd/MM/yyyy').format(data);
+      return DateFormat('dd/MM/yyyy', 'pt_BR')
+          .format(data); // Adiciona o código do local
     } else if (data is String) {
       try {
         DateTime dateTime = DateTime.parse(data);
-        return DateFormat('dd/MM/yyyy').format(dateTime);
+        return DateFormat('dd/MM/yyyy', 'pt_BR')
+            .format(dateTime); // Adiciona o código do local
       } catch (e) {
         return data;
       }
@@ -92,32 +114,32 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _confirmarLogout(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Sair'),
-        content: Text('Você realmente deseja sair?'),
-        actions: [
-          TextButton(
-            child: Text('Cancelar'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Sair'),
-            onPressed: () {
-              Navigator.of(context).pop(); // Fechar o pop-up
-              Navigator.of(context).pushReplacementNamed('/login'); // Navegar para a tela de login
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Sair'),
+          content: Text('Você realmente deseja sair?'),
+          actions: [
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Sair'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fechar o pop-up
+                Navigator.of(context).pushReplacementNamed(
+                    '/login'); // Navegar para a tela de login
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _toggleClienteOptions() {
     setState(() {
@@ -137,60 +159,61 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-   Future<void> _abrirLink(String link) async {
-  if (await canLaunch(link)) {
-    await launch(link);
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Não foi possível abrir o link.')),
+  Future<void> _abrirLink(String link) async {
+    if (await canLaunch(link)) {
+      await launch(link);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível abrir o link.')),
+      );
+    }
+  }
+
+  Future<void> _mostrarDialogo(String link) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // O usuário deve clicar no botão para fechar
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Abrir Google Maps'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Deseja abrir o link no Google Maps?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Abrir'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (link != null && link.isNotEmpty) {
+                  _abrirLink(link);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('URL do endereço não disponível')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
-}
 
-Future<void> _mostrarDialogo(String link) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false, // O usuário deve clicar no botão para fechar
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Abrir Google Maps'),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              Text('Deseja abrir o link no Google Maps?'),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Cancelar'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Abrir'),
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (link != null && link.isNotEmpty) {
-                _abrirLink(link);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('URL do endereço não disponível')),
-                );
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
- Future<String?> _getEnderecoLink(int idEndereco) async {
+  Future<String?> _getEnderecoLink(int idEndereco) async {
     return await _entregaService.getLinkEnderecoByIdEntrega(idEndereco);
   }
-Widget _buildEntregaCard(Map<String, dynamic> entrega) {
+
+  Widget _buildEntregaCard(Map<String, dynamic> entrega) {
     return FutureBuilder<String?>(
       future: _getEnderecoLink(entrega['id_Entrega']),
       builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
@@ -258,29 +281,40 @@ Widget _buildEntregaCard(Map<String, dynamic> entrega) {
                     ),
                   ],
                 ),
-                SizedBox(height: 5),
-                if (entrega['status'] == 'pendente' || entrega['status'] == 'futura')
-                  ElevatedButton(
-                    onPressed: () => _concluirEntrega(entrega['id_Entrega']),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (entrega['status'] == 'pendente' ||
+                        entrega['status'] == 'futura')
+                      ElevatedButton(
+                        onPressed: () =>
+                            _concluirEntrega(entrega['id_Entrega']),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        child: Text('Concluir', style: TextStyle(fontSize: 12)),
+                      ),
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue, size: 24),
+                      onPressed: () => _editarEntrega(entrega['id_Entrega']),
+                      tooltip: 'Editar',
                     ),
-                    child: Text('Entrega Concluída', style: TextStyle(fontSize: 12)),
-                  ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: Icon(Icons.map, size: 24, color: Colors.blue),
-                    onPressed: () {
-                      if (urlEndereco != null && urlEndereco.isNotEmpty) {
-                        _mostrarDialogo(urlEndereco);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Endereço não encontrado ou inválido.')),
-                        );
-                      }
-                    },
-                  ),
+                    IconButton(
+                      icon: Icon(Icons.map, size: 24, color: Colors.blue),
+                      onPressed: () {
+                        if (urlEndereco != null && urlEndereco.isNotEmpty) {
+                          _mostrarDialogo(urlEndereco);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Endereço não encontrado ou inválido.')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -289,194 +323,200 @@ Widget _buildEntregaCard(Map<String, dynamic> entrega) {
       },
     );
   }
-  Widget _buildEntregaColumn(String title, List<Map<String, dynamic>> entregas, Color color) {
-  return Container(
-    width: 400, // Ajuste a largura conforme necessário
-    color: color,
-    padding: EdgeInsets.all(10),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 10),
-        Expanded(
-          child: SingleChildScrollView(
-           child: Column(
-  children: entregas
-      .where((entrega) => (entrega['cliente_nome'] ?? '')
-          .toLowerCase()
-          .contains(_searchQuery.toLowerCase()))
-      .map((entrega) => _buildEntregaCard(entrega))
-      .toList(),
-),
 
+  Widget _buildEntregaColumn(
+      String title, List<Map<String, dynamic>> entregas, Color color) {
+    return Container(
+      width: 400, // Ajuste a largura conforme necessário
+      color: color,
+      padding: EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('TELA PRINCIPAL'),
-      backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        color: Colors.white,
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-      ),
-      actions: [
-        PopupMenuButton<String>(
-          onSelected: (value) {
-            if (value == 'meu_perfil') {
-              // Ação para "Meu Perfil"
-              // Aqui você pode navegar para a página de perfil do usuário
-            } else if (value == 'sair') {
-              _confirmarLogout(context);
-            }
-          },
-          icon: CircleAvatar(
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person, color: Colors.white), // Ícone temporário para a foto de perfil
-          ),
-          itemBuilder: (BuildContext context) {
-            return [
-              PopupMenuItem<String>(
-                value: 'meu_perfil',
-                child: Text('Meu Perfil'),
+          SizedBox(height: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: entregas
+                    .where((entrega) => (entrega['cliente_nome'] ?? '')
+                        .toLowerCase()
+                        .contains(_searchQuery.toLowerCase()))
+                    .map((entrega) => _buildEntregaCard(entrega))
+                    .toList(),
               ),
-              PopupMenuItem<String>(
-                value: 'sair',
-                child: Text('Sair'),
-              ),
-            ];
-          },
-        ),
-      ],
-    ),
-    drawer: Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.red,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset('assets/images/entrega.jpg', height: 50, width: 50),
-                const SizedBox(height: 10),
-                const Text(
-                  'ENTREGAJÁ',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
-                ),
-              ],
             ),
           ),
-          ListTile(
-            leading: Icon(Icons.dashboard),
-            title: const Text('Tela principal'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: Icon(Icons.local_shipping),
-            title: const Text('Entregas'),
-            onTap: _toggleEntregaOptions,
-          ),
-          if (_showEntregaOptions) ...[
-            ListTile(
-              title: const Text('Adicionar Entrega'),
-              onTap: () async {
-                await _navigateAndRefresh(EntregaCadastroPage());
-              },
-              contentPadding: EdgeInsets.only(left: 50.0),
-            ),
-          ],
-          ListTile(
-            leading: Icon(Icons.person),
-            title: const Text('Entregadores'),
-            onTap: _toggleEntregadorOptions,
-          ),
-          if (_showEntregadorOptions) ...[
-            ListTile(
-              title: const Text('Listar Entregadores'),
-              onTap: () {
-                _navigateAndRefresh(EntregadorListagemPage());
-              },
-              contentPadding: EdgeInsets.only(left: 50.0),
-            ),
-          ],
-          ListTile(
-            leading: Icon(Icons.person_outline),
-            title: const Text('Clientes'),
-            onTap: _toggleClienteOptions,
-          ),
-          if (_showClienteOptions) ...[
-            ListTile(
-              title: const Text('Listar Clientes'),
-              onTap: () {
-                _navigateAndRefresh(ClienteListagemPage());
-              },
-              contentPadding: EdgeInsets.only(left: 50.0),
-            ),
-          ],
         ],
       ),
-    ),
-    body: Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Container(
-            width: 1200, // Define a largura do Container para corresponder à largura das colunas
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: 'Pesquisar por nome do cliente',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.search),
-              ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('TELA PRINCIPAL'),
+        backgroundColor: Color(0xFFFF0000), // Cor igual ao padrão
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'meu_perfil') {
+                // Ação para "Meu Perfil"
+                // Aqui você pode navegar para a página de perfil do usuário
+              } else if (value == 'sair') {
+                _confirmarLogout(context);
+              }
+            },
+            icon: CircleAvatar(
+              backgroundColor: Colors.grey,
+              child: Icon(Icons.person,
+                  color:
+                      Colors.white), // Ícone temporário para a foto de perfil
             ),
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'meu_perfil',
+                  child: Text('Meu Perfil'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'sair',
+                  child: Text('Sair'),
+                ),
+              ];
+            },
           ),
-          SizedBox(height: 20), // Espaço entre o campo de pesquisa e as colunas
-          Expanded(
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.red,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildEntregaColumn('Pendentes', _entregasPendentes, Color.fromARGB(255, 255, 247, 2)),
-                  
-                  _buildEntregaColumn('Futuras', _entregasFuturas, Color.fromARGB(235, 231, 134, 8)),
-                  
-                  _buildEntregaColumn('Concluídas', _entregasConcluidas, const Color.fromARGB(255, 0, 239, 8)),
+                  Image.asset('assets/images/entrega.jpg',
+                      height: 50, width: 50),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'ENTREGAJÁ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+            ListTile(
+              leading: Icon(Icons.dashboard),
+              title: const Text('Tela principal'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: Icon(Icons.local_shipping),
+              title: const Text('Entregas'),
+              onTap: _toggleEntregaOptions,
+            ),
+            if (_showEntregaOptions) ...[
+              ListTile(
+                title: const Text('Adicionar Entrega'),
+                onTap: () async {
+                  await _navigateAndRefresh(EntregaCadastroPage());
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+            ],
+            ListTile(
+              leading: Icon(Icons.person),
+              title: const Text('Entregadores'),
+              onTap: _toggleEntregadorOptions,
+            ),
+            if (_showEntregadorOptions) ...[
+              ListTile(
+                title: const Text('Listar Entregadores'),
+                onTap: () {
+                  _navigateAndRefresh(EntregadorListagemPage());
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+            ],
+            ListTile(
+              leading: Icon(Icons.person_outline),
+              title: const Text('Clientes'),
+              onTap: _toggleClienteOptions,
+            ),
+            if (_showClienteOptions) ...[
+              ListTile(
+                title: const Text('Listar Clientes'),
+                onTap: () {
+                  _navigateAndRefresh(ClienteListagemPage());
+                },
+                contentPadding: EdgeInsets.only(left: 50.0),
+              ),
+            ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+      body: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Container(
+              width:
+                  1200, // Define a largura do Container para corresponder à largura das colunas
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Pesquisar por nome do cliente',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+            SizedBox(
+                height: 20), // Espaço entre o campo de pesquisa e as colunas
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildEntregaColumn('Pendentes', _entregasPendentes,
+                        Color.fromARGB(255, 255, 247, 2)),
+                    _buildEntregaColumn('Futuras', _entregasFuturas,
+                        Color.fromARGB(235, 231, 134, 8)),
+                    _buildEntregaColumn('Concluídas', _entregasConcluidas,
+                        const Color.fromARGB(255, 0, 239, 8)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

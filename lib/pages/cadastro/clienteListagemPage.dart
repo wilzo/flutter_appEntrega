@@ -22,11 +22,11 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     _listarClientes();
   }
 
-  Future<void> _listarClientes([String searchQuery = '']) async {
+  Future<void> _listarClientes([String searchQuery = '']) async {  //ESSE TERMO SEARCHQUERY É USADO PARA BUSCAR COM BASE EM ALGUM PARAMETRO DADO PELO USUARIO
     try {
       await _databaseHelper.connect();
-      _clientes = await _clienteService.listarClientes(searchQuery);
-      setState(() {});
+      _clientes = await _clienteService.listarClientes(searchQuery); // AQUI ELE ESTÁ BUSCANDO O MÉTODO LISTARCLIENTES EM CLIENTESERVICE
+      setState(() {}); // SETA O STATUS 
     } catch (e) {
       print('Erro ao listar clientes: $e');
     } finally {
@@ -34,12 +34,12 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     }
   }
 
-  Future<void> _deletarCliente(int id, String nome) async {
+  Future<void> _deletarCliente(int id, String nome) async { //PEGA O ID DO CLIENTE E O NOME PARA PASSAR PARA O USUARIO
     bool confirmar = await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AlertDialog( //UM DIALOGO DE ALERTA PARA ALERTAR
         title: Text('Confirmação'),
-        content: Text('Deseja realmente excluir o cliente $nome?'),
+        content: Text('Deseja realmente excluir o cliente $nome?'), //AQUI ELE PASSA O NOME
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -55,8 +55,8 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
 
     if (confirmar == true) {
       try {
-        await _databaseHelper.connect();
-        await _clienteService.deleteCliente(id);
+        await _databaseHelper.connect(); //SE DELETAR ELE SE CONECTA COM O BANCO 
+        await _clienteService.deleteCliente(id); //CHAMA O MÉTODO DE DELETE NO CLIENTESERVICE E PASSA O ID E DELETA
         await _listarClientes(); // Atualiza a lista após deletar
       } catch (e) {
         print('Erro ao deletar cliente: $e');
@@ -70,7 +70,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditClientePage(clienteId: id),
+        builder: (context) => EditClientePage(clienteId: id), //ABRE A PAGINA DE EDITAR E ENVIA O ID DO CLIENTE SELECIONADO PARA EDIÇÃO
       ),
     );
 

@@ -17,6 +17,8 @@ class _EnderecoCadastroPageState extends State<EnderecoCadastroPage> {
   final EnderecoService _enderecoService = EnderecoService();
 
   bool _isLoading = false;
+
+  
 void _cadastrarEndereco() async {
   setState(() {
     _isLoading = true;

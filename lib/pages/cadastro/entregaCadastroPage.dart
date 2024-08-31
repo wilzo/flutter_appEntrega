@@ -37,6 +37,7 @@
         initialDate: DateTime.now(),
         firstDate: DateTime(2000),
         lastDate: DateTime(2101),
+        
       );
 
       if (pickedDate != null) {
@@ -48,51 +49,93 @@
       }
     }
 
-    void _cadastrarEntrega() async {
-      setState(() {
-        _isLoading = true;
-      });
+bool _validarHora(String hora) {
+  try {
+    // Tenta analisar a hora com o formato HH:mm
+    final parsedTime = DateFormat('HH:mm').parseStrict(hora);
 
-      String data = _dataController.text.trim();
-      String hora = _horaController.text.trim();
-      String descricao = _descricaoController.text.trim();
-      int? entregadorId = _entregadorSelecionadoId;
-      int? clienteId = _clienteSelecionadoId;
-      int? itemId = _itemSelecionadoId;
+    // Cria dois objetos DateTime representando o intervalo permitido
+    final inicioIntervalo = DateTime(2020, 1, 1, 7, 0); // 07:00
+    final fimIntervalo = DateTime(2020, 1, 1, 17, 0); // 17:00
 
-      if (data.isEmpty ||
-          hora.isEmpty ||
-          descricao.isEmpty ||
-          entregadorId == null ||
-          clienteId == null ||
-          itemId == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Todos os campos são obrigatórios')),
-        );
-        return;
-      }
+    // Cria um objeto DateTime com a hora inserida
+    final horaInserida = DateTime(2020, 1, 1, parsedTime.hour, parsedTime.minute);
 
-      try {
-        DateTime dataEntrega = DateFormat('yyyy-MM-dd').parseStrict(data);
+    // Verifica se a hora está dentro do intervalo permitido
+    return horaInserida.isAfter(inicioIntervalo) && horaInserida.isBefore(fimIntervalo);
+  } catch (e) {
+    return false; // Se ocorrer um erro ao analisar a hora, a entrada é inválida
+  }
+}
+ 
+   void _cadastrarEntrega() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-        await _entregaService.createEntrega(
-            dataEntrega, hora, entregadorId, clienteId, itemId);
+  String data = _dataController.text.trim();
+  String hora = _horaController.text.trim();
+  String descricao = _descricaoController.text.trim();
+  int? entregadorId = _entregadorSelecionadoId;
+  int? clienteId = _clienteSelecionadoId;
+  int? itemId = _itemSelecionadoId;
 
-        _showSuccessDialog();
-      } catch (e) {
-        print('Erro ao cadastrar entrega: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cadastrar entrega: $e')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+  if (data.isEmpty ||
+      hora.isEmpty ||
+      descricao.isEmpty ||
+      entregadorId == null ||
+      clienteId == null ||
+      itemId == null) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Todos os campos são obrigatórios')),
+    );
+    return;
+  }
+
+  // Validação da data
+  DateTime? dataEntrega;
+  try {
+    dataEntrega = DateFormat('yyyy-MM-dd').parseStrict(data);
+  } catch (e) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Data inválida. Use o formato yyyy-MM-dd.')),
+    );
+    return;
+  }
+
+  // Validação da hora
+  if (!_validarHora(hora)) {
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Hora inválida. Use o formato HH:mm e esteja entre o tempo disponivel, entre 07:00 as 17:00')),
+    );
+    return;
+  }
+
+  try {
+    await _entregaService.createEntrega(
+        dataEntrega, hora, entregadorId, clienteId, itemId);
+
+    _showSuccessDialog();
+  } catch (e) {
+    print('Erro ao cadastrar entrega: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao cadastrar entrega: $e')),
+    );
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
 
     void _abrirListagemEntregadores() async {
       final resultado = await Navigator.push(

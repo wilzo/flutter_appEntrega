@@ -35,12 +35,12 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     }
   }
 
- Future<void> _deletarEndereco(int id) async {
+ Future<void> _deletarEndereco(int id, rua, numero) async {
   bool confirmar = await showDialog(
     context: context,
     builder: (context) => AlertDialog(
       title: Text('Confirmação'),
-      content: Text('Deseja realmente excluir este endereço e seus clientes associados?'),
+      content: Text('Deseja realmente excluir o endereço $rua $numero?  '),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
@@ -247,7 +247,7 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                                     ),
                                     IconButton(
                                       icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deletarEndereco(id),
+                                      onPressed: () => _deletarEndereco(id, rua, numero),
                                     ),
                                     IconButton(
                                       icon: Icon(Icons.check, color: Colors.green),
