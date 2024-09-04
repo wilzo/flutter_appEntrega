@@ -98,21 +98,50 @@ Future<List<Map<String, dynamic>>> listarClientes(String searchQuery) async {
     return [];
   }
 }
-
 Future<void> deleteCliente(int id) async {
-    if (_connection == null) {
-      await connect();
-    }
+  if (_connection == null) {
+    await connect();
+  }
 
-    try {
+  try {
+    await _connection!.execute(
+      'DELETE FROM clientes WHERE id = \$1',
+      parameters: [id],
+    );
+    print('Cliente deletado com sucesso.');
+  } catch (e) {
+    print('Erro ao deletar cliente: $e');
+  }
+}
+
+
+Future<bool> canDeleteCliente(int id) async {
+  if (_connection == null) {
+    await connect();
+  }
+
+  try {
+    // Verificar se o cliente possui entregas associadas
+    final result = await _connection!.execute(
+      'SELECT COUNT(*) FROM entregas WHERE id_Cliente = \$1',
+      parameters: [id],
+    );
+
+    // Verifica se o cliente possui entregas associadas
+    if (result.isNotEmpty && (result.first[0] as int?)! > 0) {
+      return false;  // Não pode deletar
+    } else {
       await _connection!.execute(
         'DELETE FROM clientes WHERE id = \$1',
         parameters: [id],
       );
-    } catch (e) {
-      print('Erro ao deletar cliente: $e');
+      return true;  // Deleção bem-sucedida
     }
+  } catch (e) {
+    print('Erro ao deletar cliente: $e');
+    return false;
   }
+}
 
    Future<void> updateCliente(int id, String nome, String telefone, String email, int? enderecoId) async {
     if (_connection == null) {

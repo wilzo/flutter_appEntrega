@@ -14,53 +14,53 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-    final UserService _userService = UserService();
+  final UserService _userService = UserService();
 
   bool _isLoading = false;
 
-void _login() async {
-  setState(() {
-    _isLoading = true;
-  });
-
-  String email = _emailController.text.trim();
-  String password = _passwordController.text.trim();
-
-  if (email.isEmpty || password.isEmpty) {
+  void _login() async {
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Todos os campos são obrigatórios')),
-    );
-    return;
-  }
 
-  try {
-    bool success = await _userService.loginUser(email, password);
-    if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DashboardPage(),
-        ),
-      );
-    } else {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Credenciais inválidas')),
+        SnackBar(content: Text('Todos os campos são obrigatórios')),
       );
+      return;
     }
-  } catch (e) {
-    print('Erro ao fazer login: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Erro ao fazer login: $e')),
-    );
-  } finally {
-    setState(() {
-      _isLoading = false;
-    });
+
+    try {
+      bool success = await _userService.loginUser(email, password);
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardPage(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Credenciais inválidas')),
+        );
+      }
+    } catch (e) {
+      print('Erro ao fazer login: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao fazer login: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +68,8 @@ void _login() async {
       backgroundColor: Color(0xFFFAFAFA),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 400.0, vertical: 50.0),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 400.0, vertical: 50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -84,7 +85,7 @@ void _login() async {
                   Column(
                     children: [
                       const Text(
-                        'ENTREGA JA',
+                        'ENTREGA JÁ',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFFFF0000),
@@ -209,7 +210,6 @@ void _login() async {
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                
               ),
             ],
           ),
@@ -217,4 +217,4 @@ void _login() async {
       ),
     );
   }
-} 
+}

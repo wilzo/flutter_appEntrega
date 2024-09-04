@@ -137,6 +137,29 @@ Future<bool> deleteEndereco(int id) async {
   }
 }
 
+Future<bool> canDeleteEndereco(int id) async {
+  if (_connection == null) {
+    await connect();
+  }
+
+  try {
+    // Verificar se o endereço está vinculado a algum cliente
+    final result = await _connection!.execute(
+      'SELECT COUNT(*) FROM clientes WHERE id_endereco = \$1',
+      parameters: [id],
+    );
+
+    // Verifica se o endereço possui clientes associados
+    if (result.isNotEmpty && (result.first[0] as int?)! > 0) {
+      return false;  // Não pode deletar
+    } else {
+      return true;  // Pode deletar
+    }
+  } catch (e) {
+    print('Erro ao verificar exclusão de endereço: $e');
+    return false;
+  }
+}
 // Método privado para deletar o endereço e os clientes associados
 Future<void> _deleteEnderecoEClientes(int id) async {
   try {

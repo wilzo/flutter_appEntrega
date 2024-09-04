@@ -57,6 +57,48 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  void _mostrarConfirmacaoDelecao(int idEntrega) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Confirmar Deleção'),
+        content: Text('Tem certeza que deseja deletar a entrega de ID $idEntrega?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Fecha o diálogo
+              _deletarEntrega(idEntrega); // Deleta a entrega
+            },
+            child: Text('Deletar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  Future<void> _deletarEntrega(int idEntrega) async {
+  try {
+    await _entregaService.deleteEntrega(idEntrega);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Entrega deletada com sucesso!')),
+    );
+    // Atualizar a lista de entregas após a deleção
+    _loadEntregas();
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erro ao deletar a entrega: $e')),
+    );
+  }
+}
+
+
+
   Future<void> _loadEntregas() async {
     List<Map<String, dynamic>> entregas = await _entregaService.getEntregas();
     setState(() {
@@ -282,40 +324,46 @@ class _DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
                 SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (entrega['status'] == 'pendente' ||
-                        entrega['status'] == 'futura')
-                      ElevatedButton(
-                        onPressed: () =>
-                            _concluirEntrega(entrega['id_Entrega']),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                        ),
-                        child: Text('Concluir', style: TextStyle(fontSize: 12)),
-                      ),
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue, size: 24),
-                      onPressed: () => _editarEntrega(entrega['id_Entrega']),
-                      tooltip: 'Editar',
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.map, size: 24, color: Colors.blue),
-                      onPressed: () {
-                        if (urlEndereco != null && urlEndereco.isNotEmpty) {
-                          _mostrarDialogo(urlEndereco);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Endereço não encontrado ou inválido.')),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
+               Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    if (entrega['status'] == 'pendente' || entrega['status'] == 'futura')
+      ElevatedButton(
+        onPressed: () => _concluirEntrega(entrega['id_Entrega']),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+        ),
+        child: Text('Concluir', style: TextStyle(fontSize: 12)),
+      ),
+    IconButton(
+      icon: Icon(Icons.edit, color: Colors.blue, size: 24),
+      onPressed: () => _editarEntrega(entrega['id_Entrega']),
+      tooltip: 'Editar',
+    ),
+    IconButton(
+      icon: Icon(Icons.map, size: 24, color: Colors.blue),
+      onPressed: () {
+        if (urlEndereco != null && urlEndereco.isNotEmpty) {
+          _mostrarDialogo(urlEndereco);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Endereço não encontrado ou inválido.')),
+          );
+        }
+      },
+    ),
+    IconButton(
+  icon: Icon(Icons.delete, color: Colors.red, size: 24),
+  onPressed: () {
+    _mostrarConfirmacaoDelecao(entrega['id_Entrega']);
+  },
+  tooltip: 'Deletar',
+),
+
+  ],
+),
+
+
               ],
             ),
           ),
@@ -389,10 +437,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             itemBuilder: (BuildContext context) {
               return [
-                PopupMenuItem<String>(
-                  value: 'meu_perfil',
-                  child: Text('Meu Perfil'),
-                ),
+                
                 PopupMenuItem<String>(
                   value: 'sair',
                   child: Text('Sair'),

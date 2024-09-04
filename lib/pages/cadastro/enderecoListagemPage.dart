@@ -35,58 +35,82 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
     }
   }
 
- Future<void> _deletarEndereco(int id, rua, numero) async {
-  bool confirmar = await showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Confirmação'),
-      content: Text('Deseja realmente excluir o endereço $rua $numero?  '),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text('Cancelar'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text('Excluir'),
-        ),
-      ],
-    ),
-  );
+  Future<void> _deletarEndereco(int id, String rua, String numero) async {
+    // Verificar se o endereço pode ser excluído
+    bool podeDeletar = await _enderecoService.canDeleteEndereco(id);
 
-  if (confirmar == true) {
-    try {
-      bool foiDeletado = await _enderecoService.deleteEndereco(id);
+    if (!podeDeletar) {
+      // Mostrar um diálogo ao usuário informando sobre o problema
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Erro'),
+          content: Text(
+              'Não é possível excluir o endereço $rua $numero porque ele está vinculado a um cliente.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
-      if (foiDeletado) {
-        // Exibe uma notificação de sucesso
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Endereço e clientes associados deletados com sucesso.'),
-            backgroundColor: Colors.green,
+    // Mostrar um diálogo de confirmação
+    bool confirmar = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirmação'),
+        content: Text('Deseja realmente excluir o endereço $rua $numero?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar'),
           ),
-        );
-        await _listarEnderecos(); // Atualiza a lista após deletar
-      } else {
-        // Exibe uma notificação avisando que há clientes associados
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      try {
+        bool foiDeletado = await _enderecoService.deleteEndereco(id);
+
+        if (foiDeletado) {
+          // Exibe uma notificação de sucesso
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Endereço deletado com sucesso.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          await _listarEnderecos(); // Atualiza a lista após deletar
+        } else {
+          // Exibe uma notificação avisando que a exclusão não foi bem-sucedida
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Não foi possível excluir o endereço.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        print('Erro ao deletar endereço: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Não é possível excluir o endereço, pois há clientes associados.'),
+            content: Text('Erro ao tentar deletar o endereço.'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      print('Erro ao deletar endereço: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao tentar deletar o endereço.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
-}
+
   Future<void> _editarEndereco(int id) async {
     final result = await Navigator.push(
       context,
@@ -213,7 +237,7 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                       final id = endereco['id'];
                       final rua = endereco['rua'];
                       final numero = endereco['numero'];
-                      final link = endereco['link']; 
+                      final link = endereco['link'];
 
                       return Card(
                         elevation: 4,
@@ -242,20 +266,25 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      icon:
+                                          Icon(Icons.edit, color: Colors.blue),
                                       onPressed: () => _editarEndereco(id),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deletarEndereco(id, rua, numero),
+                                      icon:
+                                          Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () =>
+                                          _deletarEndereco(id, rua, numero),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.check, color: Colors.green),
+                                      icon: Icon(Icons.check,
+                                          color: Colors.green),
                                       onPressed: () {
                                         Navigator.pop(
                                           context,
                                           {
-                                            'id': id, // Adiciona o ID do endereço aqui
+                                            'id':
+                                                id, // Adiciona o ID do endereço aqui
                                             'rua': rua,
                                             'numero': numero,
                                           },
@@ -264,7 +293,8 @@ class _EnderecoListagemPageState extends State<EnderecoListagemPage> {
                                     ),
                                     if (link != null && link.isNotEmpty)
                                       IconButton(
-                                        icon: Icon(Icons.map, color: Colors.blue),
+                                        icon:
+                                            Icon(Icons.map, color: Colors.blue),
                                         onPressed: () => _mostrarDialogo(link),
                                       ),
                                   ],

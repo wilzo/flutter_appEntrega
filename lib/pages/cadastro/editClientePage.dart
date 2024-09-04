@@ -18,10 +18,8 @@
     late TextEditingController _nomeController;
     late TextEditingController _telefoneController;
     late TextEditingController _emailController;
-    int? _enderecoSelecionado;
 
     int? _enderecoSelecionadoId;
-    int? _enderecoSelecionadoIdArmazenado; // Nova variável para armazenar o ID
     String? _enderecoSelecionadoDescricao;
     bool _isLoading = false;
 
@@ -231,7 +229,7 @@
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
                           Text(
-                            'ENTREGA JA',
+                            'ENTREGA JÁ',
                             style: TextStyle(
                               color: Colors.red,
                               fontSize: 24,

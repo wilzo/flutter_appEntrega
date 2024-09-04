@@ -22,11 +22,13 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     _listarClientes();
   }
 
-  Future<void> _listarClientes([String searchQuery = '']) async {  //ESSE TERMO SEARCHQUERY É USADO PARA BUSCAR COM BASE EM ALGUM PARAMETRO DADO PELO USUARIO
+  Future<void> _listarClientes([String searchQuery = '']) async {
+    //ESSE TERMO SEARCHQUERY É USADO PARA BUSCAR COM BASE EM ALGUM PARAMETRO DADO PELO USUARIO
     try {
       await _databaseHelper.connect();
-      _clientes = await _clienteService.listarClientes(searchQuery); // AQUI ELE ESTÁ BUSCANDO O MÉTODO LISTARCLIENTES EM CLIENTESERVICE
-      setState(() {}); // SETA O STATUS 
+      _clientes = await _clienteService.listarClientes(
+          searchQuery); // AQUI ELE ESTÁ BUSCANDO O MÉTODO LISTARCLIENTES EM CLIENTESERVICE
+      setState(() {}); // SETA O STATUS
     } catch (e) {
       print('Erro ao listar clientes: $e');
     } finally {
@@ -34,12 +36,34 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     }
   }
 
-  Future<void> _deletarCliente(int id, String nome) async { //PEGA O ID DO CLIENTE E O NOME PARA PASSAR PARA O USUARIO
+  Future<void> _deletarCliente(int id, String nome) async {
+    bool podeDeletar = await _clienteService.canDeleteCliente(id);
+
+    if (!podeDeletar) {
+      // Mostrar um diálogo ao usuário informando sobre o problema
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Erro'),
+          content: Text(
+              'Não é possível excluir o cliente $nome porque ele possui entregas associadas.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Mostrar um diálogo de confirmação
     bool confirmar = await showDialog(
       context: context,
-      builder: (context) => AlertDialog( //UM DIALOGO DE ALERTA PARA ALERTAR
+      builder: (context) => AlertDialog(
         title: Text('Confirmação'),
-        content: Text('Deseja realmente excluir o cliente $nome?'), //AQUI ELE PASSA O NOME
+        content: Text('Deseja realmente excluir o cliente $nome?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -47,7 +71,7 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('excluir'),
+            child: Text('Excluir'),
           ),
         ],
       ),
@@ -55,9 +79,9 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
 
     if (confirmar == true) {
       try {
-        await _databaseHelper.connect(); //SE DELETAR ELE SE CONECTA COM O BANCO 
-        await _clienteService.deleteCliente(id); //CHAMA O MÉTODO DE DELETE NO CLIENTESERVICE E PASSA O ID E DELETA
-        await _listarClientes(); // Atualiza a lista após deletar
+        await _databaseHelper.connect(); // Conectar com o banco de dados
+        await _clienteService.deleteCliente(id); // Deletar cliente
+        await _listarClientes(); // Atualizar a lista após deletar
       } catch (e) {
         print('Erro ao deletar cliente: $e');
       } finally {
@@ -70,7 +94,9 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditClientePage(clienteId: id), //ABRE A PAGINA DE EDITAR E ENVIA O ID DO CLIENTE SELECIONADO PARA EDIÇÃO
+        builder: (context) => EditClientePage(
+            clienteId:
+                id), //ABRE A PAGINA DE EDITAR E ENVIA O ID DO CLIENTE SELECIONADO PARA EDIÇÃO
       ),
     );
 
@@ -177,7 +203,8 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.phone, size: 16, color: Colors.grey),
+                                  Icon(Icons.phone,
+                                      size: 16, color: Colors.grey),
                                   SizedBox(width: 5),
                                   Text(
                                       'Telefone: ${cliente['telefone'] ?? 'Telefone'}'),
@@ -186,7 +213,8 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                               SizedBox(height: 5),
                               Row(
                                 children: [
-                                  Icon(Icons.email, size: 16, color: Colors.grey),
+                                  Icon(Icons.email,
+                                      size: 16, color: Colors.grey),
                                   SizedBox(width: 5),
                                   Text('Email: ${cliente['email'] ?? 'Email'}'),
                                 ],
@@ -212,12 +240,15 @@ class _ClienteListagemPageState extends State<ClienteListagemPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: Icon(Icons.edit, color: Colors.blue),
+                                      icon:
+                                          Icon(Icons.edit, color: Colors.blue),
                                       onPressed: () => _editarCliente(id),
                                     ),
                                     IconButton(
-                                      icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deletarCliente(id, nome),
+                                      icon:
+                                          Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () =>
+                                          _deletarCliente(id, nome),
                                     ),
                                   ],
                                 )

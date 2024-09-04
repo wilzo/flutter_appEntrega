@@ -237,7 +237,7 @@ class _EntregadorCadastroPageState extends State<EntregadorCadastroPage> {
                   Column(
                     children: [
                       const Text(
-                        'ENTREGA JA',
+                        'ENTREGA JÁ',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Color(0xFFFF0000),

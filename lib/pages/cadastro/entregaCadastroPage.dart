@@ -25,9 +25,6 @@
     String? _itemSelecionadoDescricao;
     int? _itemSelecionadoId;
 
-    int? _entregadorSelecionado;
-    int? _clienteSelecionado;
-    int? _itemSelecionado;
 
     bool _isLoading = false;
 
@@ -248,7 +245,7 @@ bool _validarHora(String hora) {
                     Column(
                       children: [
                         const Text(
-                          'ENTREGA JA',
+                          'ENTREGA JÁ',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Color(0xFFFF0000),

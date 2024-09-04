@@ -33,38 +33,60 @@ class _EntregadorListagemPageState extends State<EntregadorListagemPage> {
       await _databaseHelper.closeConnection();
     }
   }
+Future<void> _deletarEntregador(int id, String nome) async {
+  // Verificar se o entregador pode ser excluído
+  bool podeDeletar = await _entregadorService.canDeleteEntregador(id);
 
-  Future<void> _deletarEntregador(int id, String nome) async {
-    bool confirmar = await showDialog(
+  if (!podeDeletar) {
+    // Mostrar um diálogo ao usuário informando sobre o problema
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirmação'),
-        content: Text('Deseja realmente excluir o entregador $nome ?'),
+        title: Text('Erro'),
+        content: Text('Não é possível excluir o entregador $nome porque ele está vinculado a uma entrega.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Excluir'),
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('OK'),
           ),
         ],
       ),
     );
+    return;
+  }
 
-    if (confirmar == true) {
-      try {
-        await _databaseHelper.connect();
-        await _entregadorService.deleteEntregador(id);
-        await _listarEntregadores(); // Atualiza a lista após deletar
-      } catch (e) {
-        print('Erro ao deletar entregador: $e');
-      } finally {
-        await _databaseHelper.closeConnection();
-      }
+  // Mostrar um diálogo de confirmação
+  bool confirmar = await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Confirmação'),
+      content: Text('Deseja realmente excluir o entregador $nome?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text('Excluir'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmar == true) {
+    try {
+      await _databaseHelper.connect(); // Conectar com o banco de dados
+      await _entregadorService.deleteEntregador(id); // Deletar entregador
+      await _listarEntregadores(); // Atualizar a lista após deletar
+    } catch (e) {
+      print('Erro ao deletar entregador: $e');
+    } finally {
+      await _databaseHelper.closeConnection();
     }
   }
+}
+
 
   Future<void> _editarEntregador(int id) async {
     final result = await Navigator.push(

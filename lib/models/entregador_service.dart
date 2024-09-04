@@ -98,6 +98,33 @@ class EntregadorService {
     }
   }
 
+Future<bool> canDeleteEntregador(int id) async {
+  if (_connection == null) {
+    await connect();
+  }
+
+  try {
+    // Verificar se o entregador está vinculado a alguma entrega
+    final result = await _connection!.execute(
+      'SELECT COUNT(*) FROM entregas WHERE id_Entregador = \$1',
+      parameters: [id],
+    );
+
+    // Verifica se o entregador possui entregas associadas
+    if (result.isNotEmpty && (result.first[0] as int?)! > 0) {
+      return false;  // Não pode deletar
+    } else {
+      await _connection!.execute(
+        'DELETE FROM entregador WHERE id_Entregador = \$1',
+        parameters: [id],
+      );
+      return true;
+    }
+  } catch (e) {
+    print('Erro ao verificar exclusão de entregador: $e');
+    return false;
+  }
+}
   Future<void> updateEntregador(
       int id, String nome, String telefone, String cnh, String veiculo) async {
     if (_connection == null) {

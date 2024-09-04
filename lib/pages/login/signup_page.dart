@@ -92,7 +92,7 @@ class _SignupPageState extends State<SignupPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'ENTREGA JA',
+                        'ENTREGA JÁ',
                         style: TextStyle(
                           fontSize: 40,
                           fontWeight: FontWeight.bold,
